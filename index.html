@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excel 数据分析赛项 · 备赛学习平台</title>
+<meta name="description" content="全国大学生大数据分析技术技能大赛（Excel 数据分析赛项）备赛学习平台：35 天四阶段逐日计划打卡、知识点详解、考前自查清单。">
+<style>
+:root{
+  --bg:#f4f7fb; --card:#ffffff; --fg:#1a2333; --muted:#64748b; --border:#e2e8f0;
+  --primary:#1d6fe0; --primary-2:#0ea5c6; --primary-fg:#ffffff;
+  --ok:#16a34a; --warn:#d97706; --soft:#eef4fd;
+  --radius:16px; --shadow:0 2px 12px rgba(29,111,224,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;background:var(--bg);color:var(--fg);line-height:1.7}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px 64px}
+/* hero */
+.hero{background:linear-gradient(135deg,#0b2a5b 0%,#14468f 45%,#0e7ea8 100%);color:#fff;padding:44px 16px 88px;text-align:center;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 82% 18%,rgba(14,165,198,.45),transparent 42%),radial-gradient(circle at 12% 85%,rgba(29,111,224,.4),transparent 40%);pointer-events:none}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:1px;position:relative;z-index:1}
+.hero .sub{margin-top:8px;font-size:14px;opacity:.85;position:relative;z-index:1}
+.badges{margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1}
+.badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);padding:4px 12px;border-radius:99px;font-size:12.5px}
+.countdown-card{max-width:720px;margin:-52px auto 0;background:var(--card);border-radius:var(--radius);box-shadow:0 8px 28px rgba(11,42,91,.18);padding:22px 24px;position:relative;z-index:2;display:flex;align-items:center;justify-content:space-around;gap:8px;flex-wrap:wrap}
+.cd-item{text-align:center;min-width:64px}
+.cd-num{font-size:34px;font-weight:800;color:var(--primary);font-variant-numeric:tabular-nums}
+.cd-label{font-size:12px;color:var(--muted)}
+.cd-sep{font-size:26px;color:var(--border);font-weight:700;padding-bottom:14px}
+.cd-title{width:100%;font-size:13px;color:var(--muted);text-align:center;margin-top:6px}
+/* tabs */
+.tabs{display:flex;gap:6px;margin:26px 0 20px;background:var(--card);padding:6px;border-radius:14px;box-shadow:var(--shadow);position:sticky;top:8px;z-index:50;overflow-x:auto}
+.tab{flex:1;min-width:max-content;text-align:center;padding:9px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:transparent;transition:.18s;white-space:nowrap}
+.tab.on{background:var(--primary);color:#fff;box-shadow:0 3px 10px rgba(29,111,224,.32)}
+.panel{display:none;animation:fade .25s}
+.panel.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h2.sec{font-size:19px;font-weight:800;margin:26px 0 12px;display:flex;align-items:center;gap:8px}
+h2.sec::before{content:"";width:4px;height:20px;border-radius:2px;background:linear-gradient(180deg,var(--primary),var(--primary-2));display:inline-block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;margin-bottom:14px}
+/* tables */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{background:var(--soft);color:var(--primary);font-weight:700;padding:9px 10px;text-align:left;white-space:nowrap}
+.tbl td{padding:9px 10px;border-top:1px solid var(--border);vertical-align:top}
+.tbl tr:nth-child(even) td{background:#fafcff}
+.scrolly{overflow-x:auto}
+/* stage */
+.stage-head{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;user-select:none}
+.stage-title{font-size:16px;font-weight:800}
+.stage-title small{display:block;font-weight:500;font-size:12.5px;color:var(--muted);margin-top:2px}
+.stage-prog{font-size:12.5px;color:var(--primary);font-weight:700;background:var(--soft);padding:4px 12px;border-radius:99px;white-space:nowrap}
+.days{display:none;margin-top:14px}
+.days.open{display:block}
+.day{display:flex;gap:12px;align-items:flex-start;padding:11px 12px;border-radius:12px;border:1px solid transparent;transition:.15s}
+.day:hover{background:var(--soft)}
+.day.today{background:#fff8ed;border-color:#f5c98a}
+.day.done{opacity:.62}
+.day .chk{margin-top:5px;width:20px;height:20px;flex:none;accent-color:var(--ok);cursor:pointer}
+.day .date{font-size:12.5px;color:var(--muted);min-width:76px;flex:none;font-weight:600;padding-top:2px}
+.day .date b{display:block;font-size:14px;color:var(--fg)}
+.day .body{flex:1}
+.day .task{font-size:14px}
+.day .tag{display:inline-block;font-size:11px;font-weight:700;color:var(--primary);background:var(--soft);border-radius:6px;padding:1px 7px;margin-bottom:3px}
+.day.today .tag{background:#fdeacc;color:#b45309}
+.today-mark{font-size:11px;color:#b45309;font-weight:800;margin-left:6px}
+.rest-day{background:#f0fdf4;border:1px dashed #86efac;border-radius:12px;padding:12px 16px;font-size:13.5px;color:#166534;margin-top:10px}
+/* milestone */
+.miles{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
+.mile{flex:none;width:200px;background:linear-gradient(135deg,#0b2a5b,#0e7ea8);color:#fff;border-radius:14px;padding:14px 16px}
+.mile .d{font-size:12px;opacity:.8}
+.mile .t{font-size:15px;font-weight:800;margin-top:4px}
+.mile .s{font-size:12px;opacity:.85;margin-top:4px}
+/* knowledge accordion */
+.kb{border:1px solid var(--border);border-radius:14px;background:var(--card);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.kb-head{padding:14px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.kb-head:hover{background:var(--soft)}
+.kb-head .arrow{margin-left:auto;color:var(--muted);transition:.2s;font-size:13px}
+.kb.open .arrow{transform:rotate(90deg)}
+.kb-title{font-weight:800;font-size:15px}
+.kb-chip{font-size:11px;font-weight:700;border-radius:6px;padding:1px 8px}
+.chip-master{background:#dcfce7;color:#15803d}
+.chip-familiar{background:#dbeafe;color:#1d4ed8}
+.chip-know{background:#f1f5f9;color:#64748b}
+.kb-body{display:none;padding:0 18px 16px;font-size:13.8px}
+.kb.open .kb-body{display:block}
+.kb-body .row{display:flex;gap:10px;margin-top:10px}
+.kb-body .k{flex:none;width:72px;font-weight:700;color:var(--primary);font-size:12.5px;padding-top:2px}
+.kb-body .v{flex:1}
+.kb-body .excel{background:var(--soft);border-radius:10px;padding:10px 12px}
+.kb-body .tip{background:#fff8ed;border-radius:10px;padding:10px 12px;color:#92400e}
+/* checklist */
+.ck{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px}
+.ck:hover{background:var(--soft)}
+.ck .chk{margin-top:4px;width:20px;height:20px;flex:none;accent-color:var(--ok);cursor:pointer}
+.ck .q{font-size:14.2px}
+.ck.done .q{text-decoration:line-through;color:var(--muted)}
+.progbar{height:10px;background:#e6edf7;border-radius:99px;overflow:hidden;margin:8px 0 4px}
+.progbar i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-2));border-radius:99px;transition:width .3s;width:0}
+.prog-txt{font-size:12.5px;color:var(--muted)}
+/* tips */
+.tip-card{display:flex;gap:12px;margin-bottom:12px}
+.tip-card .ico{flex:none;width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px}
+.tip-card b{font-size:14.5px}
+.tip-card p{font-size:13.5px;color:var(--muted);margin-top:2px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);background:#1a2333;color:#fff;padding:9px 20px;border-radius:99px;font-size:13px;opacity:0;transition:.25s;z-index:99;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:560px){
+  .hero h1{font-size:20px}
+  .cd-num{font-size:26px}
+  .day .date{min-width:64px}
+  .countdown-card{padding:16px 12px}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Excel 数据分析赛项 · 备赛学习平台</h1>
+  <div class="sub">全国大学生大数据分析技术技能大赛（第五届）｜依据北京大数据协会《初级考试大纲》编制</div>
+  <div class="badges">
+    <span class="badge">🎯 省级赛 2026-10-17 开赛</span>
+    <span class="badge">📅 有效备赛 35 天 · 四阶段</span>
+    <span class="badge">💾 进度自动保存在本机</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="countdown-card">
+    <div class="cd-item"><div class="cd-num" id="cdD">--</div><div class="cd-label">天</div></div>
+    <div class="cd-sep">:</div>
+    <div class="cd-item"><div class="cd-num" id="cdH">--</div><div class="cd-label">时</div></div>
+    <div class="cd-sep">:</div>
+    <div class="cd-item"><div class="cd-num" id="cdM">--</div><div class="cd-label">分</div></div>
+    <div class="cd-sep">:</div>
+    <div class="cd-item"><div class="cd-num" id="cdS">--</div><div class="cd-label">秒</div></div>
+    <div class="cd-title">距离省级赛开赛（10 月 17 日）还有</div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-p="p1">📊 备赛总览</button>
+    <button class="tab" data-p="p2">🗓️ 逐日计划</button>
+    <button class="tab" data-p="p3">📚 知识点</button>
+    <button class="tab" data-p="p4">✅ 自查清单</button>
+    <button class="tab" data-p="p5">💡 备考方法</button>
+  </div>
+
+  <!-- ============ P1 总览 ============ -->
+  <div class="panel on" id="p1">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <b style="font-size:15.5px">📈 我的备赛总进度</b>
+        <span class="prog-txt" id="allTxt">已完成 0 / 0 项</span>
+      </div>
+      <div class="progbar" style="margin-top:12px"><i id="allBar"></i></div>
+      <div class="prog-txt" id="allPct">0%</div>
+    </div>
+
+    <h2 class="sec">赛事基本信息</h2>
+    <div class="card scrolly">
+      <table class="tbl">
+        <tr><th style="width:110px">项目</th><th>内容</th></tr>
+        <tr><td>比赛名称</td><td>全国大学生大数据分析技术技能大赛（第五届）</td></tr>
+        <tr><td>主办单位</td><td>北京大数据协会、中国科技新闻学会大数据专委会</td></tr>
+        <tr><td>命题依据</td><td>《大数据分析人员职业技术技能标准》（T/BBDA 001—2021）及考试大纲</td></tr>
+        <tr><td>参赛赛项</td><td>Excel 数据分析（大赛另设 Python 数据分析赛项）</td></tr>
+        <tr><td>省级赛</td><td>2026 年 10 月 17 日—25 日，线上答题：判断 10 分＋单选 40 分＋多选 20 分＋实操 30 分（实操也以选择题形式作答）</td></tr>
+        <tr><td>晋级规则</td><td>省级赛一等奖（约前 10%）晋级全国总决赛</td></tr>
+        <tr><td>全国总决赛</td><td>2026 年 11 月 22 日，提交数据分析报告作品；70 分及以上可获北京大数据协会《初级数据分析师》证书</td></tr>
+      </table>
+    </div>
+
+    <h2 class="sec">考试科目与题型结构</h2>
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--muted);margin-bottom:10px">考试分两个科目：<b style="color:var(--fg)">科目一《数据分析基础知识》</b>——客观题（判断＋单选＋多选共 70 分）主要来源；<b style="color:var(--fg)">科目二《数据分析专业能力》</b>——实操题（30 分）出题范围，同时支撑部分客观题。</p>
+      <div class="scrolly"><table class="tbl">
+        <tr><th>题型</th><th>分值</th><th>主要考查内容</th><th>对应大纲</th></tr>
+        <tr><td>判断题</td><td>10 分</td><td>数据分析基础概念、法律法规、职业道德的判断</td><td>科目一</td></tr>
+        <tr><td>单选题</td><td>40 分</td><td>统计学基础、分析方法概念、Excel 功能与操作要点</td><td>科目一＋科目二</td></tr>
+        <tr><td>多选题</td><td>20 分</td><td>法规制度细节、方法适用场景、操作流程要点</td><td>科目一＋科目二</td></tr>
+        <tr><td>实操题</td><td>30 分</td><td>在 Excel 中实际完成数据处理与分析操作（以选择题形式作答）</td><td>科目二</td></tr>
+      </table></div>
+    </div>
+
+    <h2 class="sec">四阶段备赛路线</h2>
+    <div class="card scrolly">
+      <table class="tbl">
+        <tr><th>阶段</th><th>日期</th><th>天数</th><th>核心目标</th></tr>
+        <tr><td>一：基础夯实</td><td>9 月 5 日—9 月 18 日</td><td>14 天</td><td>函数公式过关＋数据分析基础理论通读</td></tr>
+        <tr><td>二：核心突破</td><td>9 月 19 日—9 月 30 日</td><td>12 天</td><td>数据透视表＋图表＋Power Query</td></tr>
+        <tr><td>国庆假期</td><td>10 月 1 日—10 月 7 日</td><td>—</td><td>休息，不安排任务</td></tr>
+        <tr><td>三：刷题强化</td><td>10 月 8 日—10 月 14 日</td><td>7 天</td><td>法规伦理速记＋模拟题＋实操案例</td></tr>
+        <tr><td>四：考前冲刺</td><td>10 月 15 日—10 月 16 日</td><td>2 天</td><td>全真模拟＋考试环境检查</td></tr>
+      </table>
+    </div>
+
+    <h2 class="sec">关键时间节点</h2>
+    <div class="miles">
+      <div class="mile"><div class="d">10 月 17 日—25 日</div><div class="t">省级赛</div><div class="s">线上考试，按官方/学校通知时间参加</div></div>
+      <div class="mile"><div class="d">11 月 2 日—13 日</div><div class="t">全国赛报名</div><div class="s">省赛一等奖获得者报名总决赛</div></div>
+      <div class="mile"><div class="d">11 月 22 日</div><div class="t">全国总决赛</div><div class="s">提交数据分析报告；≥70 分获证书</div></div>
+    </div>
+  </div>
+
+  <!-- ============ P2 逐日计划 ============ -->
+  <div class="panel" id="p2">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <b style="font-size:15.5px">🗓️ 计划完成进度</b>
+        <span class="prog-txt" id="planTxt">0 / 0 天</span>
+      </div>
+      <div class="progbar" style="margin-top:12px"><i id="planBar"></i></div>
+      <div class="prog-txt">每天投入 1.5—2 小时；勾选即打卡，进度自动保存在本机浏览器。若进度落后，优先在周日补上。</div>
+    </div>
+    <div id="planBox"></div>
+  </div>
+
+  <!-- ============ P3 知识点 ============ -->
+  <div class="panel" id="p3">
+    <h2 class="sec">科目一《数据分析基础知识》</h2>
+    <div id="kbS1"></div>
+    <h2 class="sec">科目二《数据分析专业能力》（Excel 落地）</h2>
+    <div id="kbS2"></div>
+  </div>
+
+  <!-- ============ P4 自查清单 ============ -->
+  <div class="panel" id="p4">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <b style="font-size:15.5px">✅ 自查完成度</b>
+        <span class="prog-txt" id="ckTxt">0 / 0 项</span>
+      </div>
+      <div class="progbar" style="margin-top:12px"><i id="ckBar"></i></div>
+    </div>
+    <h2 class="sec">知识点自查</h2>
+    <div class="card" id="ckKnow"></div>
+    <h2 class="sec">考试环境自查</h2>
+    <div class="card" id="ckEnv"></div>
+  </div>
+
+  <!-- ============ P5 备考方法 ============ -->
+  <div class="panel" id="p5">
+    <div id="tipsBox"></div>
+    <div class="card" style="background:linear-gradient(135deg,#0b2a5b,#0e7ea8);color:#fff;border:none">
+      <b style="font-size:15.5px">🏅 冲刺目标</b>
+      <p style="font-size:13.5px;opacity:.92;margin-top:6px">省级赛一等奖（约前 10%）→ 全国总决赛（11 月 22 日提交数据分析报告作品）→ 70 分及以上获北京大数据协会《初级数据分析师》证书。平时练习有意识走完「清洗→分析→图表→结论」全流程并随手保存，为总决赛的报告作品打基础。</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Excel 数据分析赛项 · 备赛学习平台 ｜ 内容依据北京大数据协会《初级考试大纲》编制（2026-09-05）<br>
+  所有打卡记录仅保存在你的浏览器本机（localStorage），不会上传任何服务器
+</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= 数据 ================= */
+var STAGES=[
+{name:"阶段一 · 基础夯实",range:"9 月 5 日 — 9 月 18 日 · 函数公式＋基础理论",days:[
+["2026-09-05","9月5日","六","整体","登录大赛官网，下载考试大纲；做官方模拟习题第 1 套摸底（不计时）；确认电脑安装微软 Office 版 Excel（非 WPS）"],
+["2026-09-06","9月6日","日","科目一(一)1-2","通读数据分析基础：问题识别与指标设计、数据采集方法及适用性；整理笔记"],
+["2026-09-07","9月7日","一","科目一(一)3","逻辑函数 IF/IFS/AND/OR，练 10 题；通读数据预处理方法概念"],
+["2026-09-08","9月8日","二","科目二(三)","查找引用函数 VLOOKUP、INDEX+MATCH，练 10 题"],
+["2026-09-09","9月9日","三","科目二(三)","多条件统计 SUMIFS/COUNTIFS/AVERAGEIFS，练 15 题"],
+["2026-09-10","9月10日","四","科目二(三)","文本函数 LEFT/RIGHT/MID/TEXT/TEXTJOIN，练 10 题"],
+["2026-09-11","9月11日","五","综合","本周函数综合练习 15 题；建立错题本"],
+["2026-09-12","9月12日","六","科目二(三)","日期函数 TODAY/DATEDIF/WORKDAY/YEAR/MONTH"],
+["2026-09-13","9月13日","日","科目二(四)","统计函数 AVERAGE/MEDIAN/MODE/RANK/LARGE/SMALL；对应「参数与统计量」概念"],
+["2026-09-14","9月14日","一","科目二(三)","动态数组函数 XLOOKUP/FILTER/UNIQUE（视版本，会用即可）"],
+["2026-09-15","9月15日","二","科目二(三)","数据清洗：删除重复项、分列、查找替换、文本转数值"],
+["2026-09-16","9月16日","三","科目二(三)","数据清洗：数据验证、条件格式标记异常值、缺失值处理"],
+["2026-09-17","9月17日","四","科目二(三)","多关键字排序、高级筛选、分类汇总（业务指标汇总）"],
+["2026-09-18","9月18日","五","综合","阶段小测：限时做 1 套模拟题客观题部分，错题入本"]]},
+{name:"阶段二 · 核心突破",range:"9 月 19 日 — 9 月 30 日 · 透视表＋图表＋Power Query",days:[
+["2026-09-19","9月19日","六","科目二(三)","数据透视表：创建方法、行/列/值/筛选四大区域字段布局"],
+["2026-09-20","9月20日","日","科目二(三)","透视表：值汇总方式切换（求和/计数/平均值/百分比）——高频坑点，重点练"],
+["2026-09-21","9月21日","一","科目二(四)","透视表：排序、值筛选（前 N 项）、日期与数值分组（数据降维与分类）"],
+["2026-09-22","9月22日","二","科目二(三)","透视表：计算字段与计算项"],
+["2026-09-23","9月23日","三","科目二(六)","透视表：切片器、日程表、多表联动"],
+["2026-09-24","9月24日","四","综合","透视表综合案例 1 个（如销售数据多维分析，完整走一遍）"],
+["2026-09-25","9月25日","五","复习","中秋节，轻量任务：翻错题本 30 分钟即可，可以休息"],
+["2026-09-26","9月26日","六","科目二(四)","图表：柱形图/条形图/折线图/饼图的选择逻辑与创建（截面与时序数据绘图）"],
+["2026-09-27","9月27日","日","科目二(六)","图表：组合图（柱形＋折线双轴）、迷你图"],
+["2026-09-28","9月28日","一","科目二(六)","图表：图表美化、数据透视图"],
+["2026-09-29","9月29日","二","科目二(二)","Power Query：从 CSV/文本导入数据、基础清洗转换（数据获取）"],
+["2026-09-30","9月30日","三","科目二(二)","Power Query：合并查询、追加查询、透视/逆透视"]]},
+{name:"阶段三 · 刷题强化",range:"10 月 8 日 — 10 月 14 日 · 法规伦理＋模拟题＋实操案例",days:[
+["2026-10-08","10月8日","四","复习","收心日：重做错题本中函数＋透视表部分，找回手感"],
+["2026-10-09","10月9日","五","科目一(二)","数据法律法规速记：《数据安全法》《网络安全法》《个人信息保护法》核心制度"],
+["2026-10-10","10月10日","六","综合","官方模拟习题第 2 套（客观题部分计时完成）"],
+["2026-10-11","10月11日","日","科目一(三)","职业道德（伦理原则/算法风险/应用风险）＋客观题错题回炉"],
+["2026-10-12","10月12日","一","科目二综合","实操专项：完整案例 1（清洗→透视→图表全流程）"],
+["2026-10-13","10月13日","二","综合","官方模拟习题第 3 套＋错题分析"],
+["2026-10-14","10月14日","三","科目二(五)","实操专项：完整案例 2（含趋势线/预测，了解数据分析报告结构）"]]},
+{name:"阶段四 · 考前冲刺",range:"10 月 15 日 — 10 月 16 日 · 全真模拟＋环境检查",days:[
+["2026-10-15","10月15日","四","综合","全真模拟 1：按正式考试流程完整做 1 套（判断＋单选＋多选＋实操）"],
+["2026-10-16","10月16日","五","综合","全真模拟 2；最后复盘错题本；检查考试环境（电脑、网络、Excel 版本）"]]}
+];
+
+var KB1=[
+{t:"1. 数据分析基础知识",chip:"掌握",rows:[
+["大纲要点","问题识别与指标设计（了解）；数据采集的基本方法及其适用性（掌握）；数据预处理方法（掌握）；数据描述的基本分析方法（熟悉）；数据建模的基本方法（熟悉）；数据展现与可视化方法（掌握）。"],
+["学习要点","业务问题如何转化为数据问题；指标、维度、指标体系的基本概念；一手数据与二手数据；问卷调研、业务数据库、日志数据、网络爬虫、公开数据集等方法及各自适用场景；缺失值、重复值、异常值、格式不一致数据的识别与处理；集中趋势（均值/中位数/众数）、离散程度（方差/标准差/极差/四分位距）、分布形态、交叉对比分析；回归、分类、聚类、时间序列预测的基本概念与用途；图表类型选择原则、报表结构、可视化基本规范。"]]},
+{t:"2. 数据法律法规",chip:"掌握",rows:[
+["核心制度","《数据安全法》《网络安全法》《个人信息保护法》等确立的数据法律体系：数据分类分级保护、网络安全等级保护、个人信息处理的「告知—同意」规则。"],
+["个人权利","自然人的隐私权、个人信息权利、数据权益；个人信息主体的查阅、复制、更正、删除等权利；常见违法行为与法律责任。"],
+["主体义务","数据分析机构、数据分析人员、数据交易平台等主体的合规义务与免责条件；民事、行政、刑事责任。"],
+["监管体制","网信部门统筹协调，工信、公安、市场监管等部门分工负责；行政许可、行政处罚等监管措施。"]]},
+{t:"3. 职业道德",chip:"掌握",rows:[
+["伦理原则","我国发布的大数据/人工智能伦理规范文件中的基本原则；大数据领域的主要伦理。"],
+["风险规避","算法偏见与歧视的识别与规避；数据加密、脱敏、最小必要原则等数据安全风险规避方法。"],
+["典型风险","隐私泄露、数据滥用、算法黑箱、数字鸿沟等；判断数据活动是否违反伦理守则的方法。"]]}
+];
+
+var KB2=[
+{t:"3.1 问题识别与指标设计",chip:"了解",rows:[
+["大纲要求","了解业务分析的步骤与要素；了解数据指标体系的设计方法；了解数据分析的整体框架和解决方案的设计方法。"],
+["学习要点","明确业务目标→拆解为可量化指标→确定分析框架；熟悉常见业务指标（销售额、客单价、转化率、复购率等）及计算口径。"],
+["Excel 落地","拿到题目先列出「要算什么指标、按什么维度汇总」，再动手操作。"],
+["考试提示","客观题常考分析步骤、指标设计原则类概念。"]]},
+{t:"3.2 数据采集",chip:"掌握",rows:[
+["大纲要求","了解数据库基础知识，掌握数据获取的基本方法；了解数据库操作知识，掌握数据存储的基本方法。"],
+["学习要点","数据库基本概念（表、字段、记录、主键）；常见数据来源与存储格式（CSV、Excel、数据库、网页）。"],
+["Excel 落地","数据→获取数据（自文本/CSV、自网页、自数据库）；Power Query 导入；外部数据连接与刷新。"],
+["考试提示","客观题考数据库基础概念；实操可能要求导入 CSV/文本文件并规范格式。"]]},
+{t:"3.3 数据预处理",chip:"掌握",hot:true,rows:[
+["大纲要求","了解数据清洗的基本概念及其必要性，熟悉数据清洗的原理，掌握数据清洗的具体流程；了解业务指标汇总知识；了解时间序列数据与纵向数据知识；掌握数据计算的基本方法。"],
+["学习要点","清洗流程「识别→处理→验证」；缺失值/重复值/异常值/格式问题的处理策略；业务指标汇总与时间序列数据的基本整理。"],
+["Excel 落地","删除重复项、分列、查找替换、TRIM/CLEAN、文本转数值、日期规范化、数据验证、条件格式标记异常、多关键字排序、高级筛选、分类汇总、合并计算。"],
+["考试提示","实操高频区，清洗流程几乎必考。"]]},
+{t:"3.4 数据描述",chip:"熟悉",rows:[
+["大纲要求","了解截面数据、时序数据、面板数据绘图知识；了解非结构数据图表和统计图表绘制知识，掌握统计图表绘制的基本方法；了解参数和统计量的含义及应用，了解统计距离的计算及应用，了解抽样估计的基本原理和方法；熟悉数据降维与分类知识，掌握数据降维、分类的软件应用。"],
+["学习要点","三类数据结构（截面/时序/面板）与对应图表；参数与统计量的区别；均值、方差、相关系数等常用统计量；抽样估计基本思想；降维与分类的概念。"],
+["Excel 落地","AVERAGE/MEDIAN/MODE/STDEV.S/VAR.S/QUARTILE/PERCENTILE/CORREL 等统计函数；数据分析工具库「描述统计」「抽样」；直方图；用透视表实现多维汇总（降维）。"],
+["考试提示","统计学概念是客观题重点；描述统计量的 Excel 计算是实操常见点。"]]},
+{t:"3.5 数据建模",chip:"熟悉",rows:[
+["大纲要求","了解业务领域理论与实践知识；了解常用的统计方法、统计预测和统计决策知识；了解商业智能、商业分析知识，掌握数据分析报告的撰写方法；了解实验设计、推断统计、多元统计知识；熟悉时间序列、假设检验知识；掌握设计复杂数据和复杂业务知识的建模方法。"],
+["学习要点","常用统计方法与预测思想；数据分析报告结构（背景→数据→方法→结论→建议）；时间序列与假设检验的基本概念；多元统计以概念理解为主。"],
+["Excel 落地","图表趋势线（线性/指数/移动平均）、FORECAST.LINEAR、数据分析工具库「回归」；单变量求解、模拟运算表。"],
+["考试提示","省赛层面以简单预测与趋势分析为主；报告撰写为全国总决赛打基础。"]]},
+{t:"3.6 数据展现与可视化",chip:"掌握",hot:true,rows:[
+["大纲要求","了解统计图、表、图像制作知识；了解页面使用知识；了解可视化组件和可视化平台配置使用知识，掌握将业务数据进行表格、图形、图像处理的方法；了解客户关系管理、思维导图和统计决策知识；熟悉决策路演；掌握灵敏度分析方法。"],
+["学习要点","图表选择原则（柱形比大小、折线看趋势、饼图看占比）；报表与仪表板结构；客户关系管理、思维导图、统计决策的基本概念；灵敏度分析（参数变化对结果的影响）。"],
+["Excel 落地","图表创建与美化、迷你图、数据透视图、切片器与日程表联动、条件格式（数据条/色阶/图标集）；用模拟运算表做灵敏度分析。"],
+["考试提示","图表选择原则是判断/单选高频考点；透视图＋切片器是实操亮点。"]]}
+];
+
+var CK_KNOW=[
+"能否不查资料写出 VLOOKUP、SUMIFS、IF 嵌套、常用日期函数？",
+"能否在 10 分钟内完成一张脏数据表的去重、格式统一、缺失值处理？",
+"能否按两个维度建透视表，切换值汇总方式并添加计算字段？",
+"能否根据场景选对图表类型并说出理由？",
+"能否导入 CSV 完成基础清洗与合并（Power Query）？",
+"能否说清均值/中位数/众数/方差/标准差的含义与适用场景？",
+"能否说出《数据安全法》《网络安全法》《个人信息保护法》三部法律的名称及各自核心制度？",
+"能否列举大数据伦理原则与常见数据安全风险？"];
+var CK_ENV=[
+"使用微软 Office 版 Excel（2016 及以上），非 WPS",
+"已登录大赛平台并熟悉答题界面",
+"已完成官方模拟习题 ≥ 3 套",
+"电脑电源接通、网络稳定",
+"报名信息（姓名/院校/赛项/组别）核对无误"];
+
+var TIPS=[
+["🎯","官方模拟习题优先","省赛答题形式与官网模拟习题一致，尽早把模拟系统吃透，这是性价比最高的备考动作。"],
+["📕","错题本制度","每天练习的错题当天记录，周末集中回炉，考前最后两天只看错题本。"],
+["🖐️","实操题必须真动手","实操题虽以选择题作答，但要在 Excel 里完整操作一遍再选，注意单位和小数位数等干扰项。"],
+["⏱️","全真模拟严格计时","阶段三、四的模拟务必按考试时长限时完成，训练时间分配与取舍能力。"],
+["🏆","目标国赛","平时练习有意识走完「清洗→分析→图表→结论」全流程并随手保存，为全国总决赛的报告作品打基础。"]];
+
+/* ================= 存储 ================= */
+var KEY="excel_contest_progress_v1";
+var state={};try{state=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){state={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function toast(msg){var t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove("show")},1400)}
+
+/* ================= 倒计时 ================= */
+var TARGET=new Date("2026-10-17T09:00:00+08:00").getTime();
+function tick(){
+  var d=TARGET-Date.now();
+  if(d<=0){document.querySelector(".countdown-card").innerHTML='<div style="text-align:center"><div class="cd-num" style="font-size:26px">省级赛进行中</div><div class="cd-title">2026 年 10 月 17 日—25 日 · 沉着应考 🏆</div></div>';return}
+  var day=Math.floor(d/864e5),h=Math.floor(d%864e5/36e5),m=Math.floor(d%36e5/6e4),s=Math.floor(d%6e4/1e3);
+  document.getElementById("cdD").textContent=day;
+  document.getElementById("cdH").textContent=("0"+h).slice(-2);
+  document.getElementById("cdM").textContent=("0"+m).slice(-2);
+  document.getElementById("cdS").textContent=("0"+s).slice(-2);
+}
+tick();setInterval(tick,1000);
+
+/* ================= tabs ================= */
+var tabs=document.getElementById("tabs");
+tabs.addEventListener("click",function(e){
+  var b=e.target.closest(".tab");if(!b)return;
+  document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("on",t===b)});
+  document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("on",p.id===b.dataset.p)});
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+
+/* ================= 逐日计划渲染 ================= */
+var todayStr=new Date().toISOString().slice(0,10);
+var planBox=document.getElementById("planBox");
+STAGES.forEach(function(st,si){
+  var card=document.createElement("div");card.className="card";
+  var doneN=st.days.filter(function(d,i){return state["s"+si+"d"+i]}).length;
+  var head=document.createElement("div");head.className="stage-head";
+  head.innerHTML='<div class="stage-title">'+st.name+'<small>'+st.range+'</small></div><span class="stage-prog" id="sp'+si+'">'+doneN+' / '+st.days.length+'</span>';
+  var days=document.createElement("div");days.className="days";
+  head.addEventListener("click",function(){days.classList.toggle("open")});
+  st.days.forEach(function(d,di){
+    var id="s"+si+"d"+di;
+    var isToday=d[0]===todayStr;
+    var row=document.createElement("div");row.className="day"+(isToday?" today":"");
+    row.innerHTML='<input type="checkbox" class="chk" id="cb-'+id+'" '+(state[id]?"checked":"")+'>'+
+      '<div class="date">'+d[1]+'<b>'+d[2]+'</b></div>'+
+      '<div class="body"><span class="tag">'+d[3]+'</span>'+(isToday?'<span class="today-mark">今天</span>':'')+'<div class="task">'+d[4]+'</div></div>';
+    var cb=row.querySelector(".chk");
+    if(state[id])row.classList.add("done");
+    cb.addEventListener("change",function(){
+      state[id]=cb.checked;if(!cb.checked)delete state[id];
+      row.classList.toggle("done",cb.checked);
+      save();refreshProg();if(cb.checked)toast("✅ 打卡成功，继续保持！");
+    });
+    days.appendChild(row);
+  });
+  if(si===0)days.classList.add("open");
+  card.appendChild(head);card.appendChild(days);planBox.appendChild(card);
+});
+/* 国庆休息卡 */
+var rest=document.createElement("div");rest.className="card";
+rest.innerHTML='<div class="rest-day">🏖️ <b>国庆假期（10 月 1 日—7 日）</b>：完全休息，不安排任务。愿意的话随手翻翻错题本即可。</div>';
+planBox.appendChild(rest);
+
+/* ================= 知识点渲染 ================= */
+function renderKB(list,mount){
+  list.forEach(function(k){
+    var el=document.createElement("div");el.className="kb";
+    var chipClass=k.chip==="掌握"?"chip-master":(k.chip==="熟悉"?"chip-familiar":"chip-know");
+    var hot=k.hot?' <span class="kb-chip" style="background:#fee2e2;color:#b91c1c">实操高频</span>':"";
+    var rows=k.rows.map(function(r){return '<div class="row"><div class="k">'+r[0]+'</div><div class="v'+(r[0]==="Excel 落地"?" excel":"")+(r[0]==="考试提示"?" tip":"")+'">'+r[1]+'</div></div>'}).join("");
+    el.innerHTML='<div class="kb-head"><span class="kb-title">'+k.t+'</span><span class="kb-chip '+chipClass+'">'+k.chip+'</span>'+hot+'<span class="arrow">▶</span></div><div class="kb-body">'+rows+'</div>';
+    el.querySelector(".kb-head").addEventListener("click",function(){el.classList.toggle("open")});
+    document.getElementById(mount).appendChild(el);
+  });
+}
+renderKB(KB1,"kbS1");renderKB(KB2,"kbS2");
+
+/* ================= 自查清单渲染 ================= */
+function renderCK(list,mount,prefix){
+  list.forEach(function(q,i){
+    var id=prefix+i;
+    var row=document.createElement("div");row.className="ck"+(state[id]?" done":"");
+    row.innerHTML='<input type="checkbox" class="chk" '+(state[id]?"checked":"")+'><div class="q">'+q+'</div>';
+    var cb=row.querySelector(".chk");
+    cb.addEventListener("change",function(){
+      state[id]=cb.checked;if(!cb.checked)delete state[id];
+      row.classList.toggle("done",cb.checked);save();refreshProg();
+    });
+    document.getElementById(mount).appendChild(row);
+  });
+}
+renderCK(CK_KNOW,"ckKnow","ckk");renderCK(CK_ENV,"ckEnv","cke");
+
+/* ================= 进度刷新 ================= */
+function refreshProg(){
+  var total=0,done=0;
+  STAGES.forEach(function(st,si){
+    var dn=0;
+    st.days.forEach(function(d,di){total++;if(state["s"+si+"d"+di]){done++;dn++}});
+    var sp=document.getElementById("sp"+si);if(sp)sp.textContent=dn+" / "+st.days.length;
+  });
+  var pt=document.getElementById("planTxt");pt.textContent=done+" / "+total+" 天";
+  document.getElementById("planBar").style.width=(total?done/total*100:0)+"%";
+  var ct=CK_KNOW.length+CK_ENV.length,cd=0;
+  CK_KNOW.forEach(function(q,i){if(state["ckk"+i])cd++});
+  CK_ENV.forEach(function(q,i){if(state["cke"+i])cd++});
+  document.getElementById("ckTxt").textContent=cd+" / "+ct+" 项";
+  document.getElementById("ckBar").style.width=(ct?cd/ct*100:0)+"%";
+  var all=total+ct,ad=done+cd;
+  document.getElementById("allTxt").textContent="已完成 "+ad+" / "+all+" 项";
+  document.getElementById("allBar").style.width=(all?ad/all*100:0)+"%";
+  document.getElementById("allPct").textContent="总完成率 "+(all?Math.round(ad/all*100):0)+"%";
+}
+refreshProg();
+</script>
+</body>
+</html>
