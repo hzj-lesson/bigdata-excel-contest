@@ -62,6 +62,9 @@ h2.sec::before{content:"";width:4px;height:20px;border-radius:2px;background:lin
 .day .body{flex:1}
 .day .task{font-size:14px}
 .day .tag{display:inline-block;font-size:11px;font-weight:700;color:var(--primary);background:var(--soft);border-radius:6px;padding:1px 7px;margin-bottom:3px}
+.day .tag.tag-link{cursor:pointer;transition:.15s}
+.day .tag.tag-link::after{content:" ↗";font-size:10px}
+.day .tag.tag-link:hover{background:var(--primary);color:#fff}
 .day.today .tag{background:#fdeacc;color:#b45309}
 .today-mark{font-size:11px;color:#b45309;font-weight:800;margin-left:6px}
 .rest-day{background:#f0fdf4;border:1px dashed #86efac;border-radius:12px;padding:12px 16px;font-size:13.5px;color:#166534;margin-top:10px}
@@ -220,7 +223,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
         <span class="prog-txt" id="planTxt">0 / 0 天</span>
       </div>
       <div class="progbar" style="margin-top:12px"><i id="planBar"></i></div>
-      <div class="prog-txt">每天投入 1.5—2 小时；勾选即打卡，进度自动保存在本机浏览器。若进度落后，优先在周日补上。</div>
+      <div class="prog-txt">每天投入 1.5—2 小时；勾选即打卡，进度自动保存在本机浏览器。若进度落后，优先在周日补上。<b style="color:var(--primary)">点击每天的彩色标签，可直达对应知识点＋本模块刷题 →</b></div>
     </div>
     <div id="planBox"></div>
   </div>
@@ -404,6 +407,61 @@ var state={};try{state=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){state=
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
 function toast(msg){var t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove("show")},1400)}
 
+/* ================= 计划 ⇄ 知识点 ⇄ 刷题 联动 ================= */
+function showPanel(pid){
+  document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("on",t.dataset.p===pid)});
+  document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("on",p.id===pid)});
+}
+function goQuiz(mod){
+  qzMod=mod;qzOnlyWrong=false;qzPos=0;
+  showPanel("p7");renderQzChips();renderQz();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function goKnowledge(mods,kbs){
+  mods=mods||[];kbs=kbs||[];
+  showPanel("p3");
+  QZBANK.forEach(function(b){
+    var el=document.getElementById("bank-"+b.n);
+    if(el)el.classList.toggle("open",mods.indexOf(b.n)>=0);
+  });
+  kbs.forEach(function(id){var el=document.getElementById(id);if(el)el.classList.add("open")});
+  setTimeout(function(){
+    var first=mods.length?document.getElementById("bank-"+mods[0]):(kbs.length?document.getElementById(kbs[0]):null);
+    if(first)first.scrollIntoView({behavior:"smooth",block:"start"});
+  },80);
+}
+/* 根据当天任务（标签+内容）推断相关知识点模块 */
+function dayMods(tag,task){
+  var s=tag+" "+task,mods=[],kbs=[];
+  if(/法规|《数据|《网络/.test(s)){return{mods:[2],kbs:["kb1-1"]}}
+  if(/伦理|职业|道德/.test(s)){return{mods:[3],kbs:["kb1-2"]}}
+  if(/指标|采集|框架/.test(s)&&/科目一/.test(tag)){return{mods:[1],kbs:["kb1-0"]}}
+  if(/Power Query|导入|CSV/.test(s)){return{mods:[11],kbs:["kb2-1"]}}
+  if(/透视/.test(s)){return{mods:[6,12],kbs:["kb2-2","kb2-5"]}}
+  if(/图表|迷你图|可视化/.test(s)){return{mods:[7],kbs:["kb2-5"]}}
+  if(/清洗|重复|分列|验证|条件格式|缺失|异常/.test(s)){return{mods:[8,11],kbs:["kb2-2"]}}
+  if(/排序|筛选|分类汇总|合并计算/.test(s)){return{mods:[8],kbs:["kb2-2"]}}
+  if(/日期函数|TODAY|DATEDIF|TEXTJOIN|文本函数|LEFT|MID|查找替换/.test(s)){return{mods:[10,5],kbs:["kb2-2"]}}
+  if(/VLOOKUP|INDEX|XLOOKUP|SUMIFS|COUNTIFS|AVERAGEIFS|逻辑函数|IF\b/.test(s)){return{mods:[5,9],kbs:["kb2-2"]}}
+  if(/统计函数|AVERAGE|MEDIAN|参数与统计量|均值|描述统计/.test(s)){return{mods:[1],kbs:["kb2-3"]}}
+  if(/趋势线|预测|回归|FORECAST|报告/.test(s)){return{mods:[8],kbs:["kb2-4"]}}
+  if(/科目一/.test(tag)){return{mods:[1],kbs:["kb1-0"]}}
+  if(/科目二\(三\)/.test(tag)){return{mods:[5,8],kbs:["kb2-2"]}}
+  if(/科目二\(四\)/.test(tag)){return{mods:[1,12],kbs:["kb2-3"]}}
+  if(/科目二\(五\)/.test(tag)){return{mods:[8],kbs:["kb2-4"]}}
+  if(/科目二\(六\)/.test(tag)){return{mods:[7],kbs:["kb2-5"]}}
+  if(/科目二\(二\)/.test(tag)){return{mods:[11],kbs:["kb2-1"]}}
+  return{mods:[],kbs:[]};
+}
+function dayGo(tag,task){
+  var s=tag+" "+task;
+  if(/整体|官网|大纲|摸底/.test(s)){showPanel("p6");window.scrollTo({top:0,behavior:"smooth"});toast("📌 先下大纲、做摸底题");return}
+  if(/模拟|错题|综合|小测|回炉|收心/.test(s)){goQuiz(0);toast("🎯 综合刷题模式：建议按模块过一遍错题");return}
+  var m=dayMods(tag,task);
+  if(!m.mods.length&&!m.kbs.length){goQuiz(0);return}
+  goKnowledge(m.mods,m.kbs);
+}
+
 /* ================= 倒计时 ================= */
 var TARGET=new Date("2026-10-17T09:00:00+08:00").getTime();
 function tick(){
@@ -445,6 +503,10 @@ STAGES.forEach(function(st,si){
       '<div class="body"><span class="tag">'+d[3]+'</span>'+(isToday?'<span class="today-mark">今天</span>':'')+'<div class="task">'+d[4]+'</div></div>';
     var cb=row.querySelector(".chk");
     if(state[id])row.classList.add("done");
+    var tagEl=row.querySelector(".tag");
+    tagEl.classList.add("tag-link");
+    tagEl.title="点击查看本任务相关知识点＋刷题";
+    tagEl.addEventListener("click",function(e){e.stopPropagation();dayGo(d[3],d[4])});
     cb.addEventListener("change",function(){
       state[id]=cb.checked;if(!cb.checked)delete state[id];
       row.classList.toggle("done",cb.checked);
@@ -461,9 +523,9 @@ rest.innerHTML='<div class="rest-day">🏖️ <b>国庆假期（10 月 1 日—7
 planBox.appendChild(rest);
 
 /* ================= 知识点渲染 ================= */
-function renderKB(list,mount){
-  list.forEach(function(k){
-    var el=document.createElement("div");el.className="kb";
+function renderKB(list,mount,prefix){
+  list.forEach(function(k,i){
+    var el=document.createElement("div");el.className="kb";el.id=prefix+"-"+i;
     var chipClass=k.chip==="掌握"?"chip-master":(k.chip==="熟悉"?"chip-familiar":"chip-know");
     var hot=k.hot?' <span class="kb-chip" style="background:#fee2e2;color:#b91c1c">实操高频</span>':"";
     var rows=k.rows.map(function(r){return '<div class="row"><div class="k">'+r[0]+'</div><div class="v'+(r[0]==="Excel 落地"?" excel":"")+(r[0]==="考试提示"?" tip":"")+'">'+r[1]+'</div></div>'}).join("");
@@ -472,7 +534,7 @@ function renderKB(list,mount){
     document.getElementById(mount).appendChild(el);
   });
 }
-renderKB(KB1,"kbS1");renderKB(KB2,"kbS2");
+renderKB(KB1,"kbS1","kb1");renderKB(KB2,"kbS2","kb2");
 
 /* ================= 进度刷新（逐日计划） ================= */
 function refreshProg(){
@@ -547,9 +609,10 @@ EX.forEach(function(e){
 /* ================= 必背速记渲染 ================= */
 var kbBank=document.getElementById("kbBank");
 QZBANK.forEach(function(b){
-  var el=document.createElement("div");el.className="kb";
-  el.innerHTML='<div class="kb-head"><span class="kb-title">'+b.n+'. '+b.t+'</span><span class="kb-chip chip-familiar">'+b.qs.length+' 题</span><span class="arrow">▶</span></div><div class="kb-body"><div class="row"><div class="k">必背</div><div class="v excel">'+b.note+'</div></div></div>';
+  var el=document.createElement("div");el.className="kb";el.id="bank-"+b.n;
+  el.innerHTML='<div class="kb-head"><span class="kb-title">'+b.n+'. '+b.t+'</span><span class="kb-chip chip-familiar">'+b.qs.length+' 题</span><span class="arrow">▶</span></div><div class="kb-body"><div class="row"><div class="k">必背</div><div class="v excel">'+b.note+'</div></div><div class="row"><div class="k">练一练</div><div class="v"><button class="tab" style="background:var(--soft);color:var(--primary)">🎯 刷本模块 '+b.qs.length+' 题</button></div></div></div>';
   el.querySelector(".kb-head").addEventListener("click",function(){el.classList.toggle("open")});
+  el.querySelector("button").addEventListener("click",function(){goQuiz(b.n)});
   kbBank.appendChild(el);
 });
 
