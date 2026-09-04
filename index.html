@@ -145,6 +145,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
     <button class="tab" data-p="p3">📚 知识点</button>
     <button class="tab" data-p="p4">✅ 自查清单</button>
     <button class="tab" data-p="p5">💡 备考方法</button>
+    <button class="tab" data-p="p6">📚 题库实战</button>
   </div>
 
   <!-- ============ P1 总览 ============ -->
@@ -247,6 +248,29 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
       <b style="font-size:15.5px">🏅 冲刺目标</b>
       <p style="font-size:13.5px;opacity:.92;margin-top:6px">省级赛一等奖（约前 10%）→ 全国总决赛（11 月 22 日提交数据分析报告作品）→ 70 分及以上获北京大数据协会《初级数据分析师》证书。平时练习有意识走完「清洗→分析→图表→结论」全流程并随手保存，为总决赛的报告作品打基础。</p>
     </div>
+  </div>
+
+  <!-- ============ P6 题库实战 ============ -->
+  <div class="panel" id="p6">
+    <h2 class="sec">备考资料包</h2>
+    <div id="resBox"></div>
+
+    <h2 class="sec">实操练习（先做题，再看答案）</h2>
+    <div id="exBox"></div>
+
+    <h2 class="sec">推荐练习顺序</h2>
+    <div class="card">
+      <div style="font-size:13.8px;line-height:2.1">
+        <b>①</b> 先读手册：背熟 <b>法律法规</b>＋<b>伦理道德</b>（性价比最高）<br>
+        <b>②</b> 刷手册 <b>77 题</b>，错题回看解析<br>
+        <b>③</b> 下载练习素材 Excel，按下方「任务回顾」独立完成 <b>3 套实操题</b><br>
+        <b>④</b> 做完点开「答案校验值」核对，重点看关键数值<br>
+        <b>⑤</b> 考前上官方模拟平台限时刷套卷
+      </div>
+    </div>
+
+    <h2 class="sec">官方入口</h2>
+    <div class="card" id="linksBox"></div>
   </div>
 
 </div>
@@ -485,6 +509,77 @@ function refreshProg(){
   document.getElementById("allPct").textContent="总完成率 "+(all?Math.round(ad/all*100):0)+"%";
 }
 refreshProg();
+
+/* ================= 题库实战：资料包 ================= */
+var BASE="files/";
+var RES=[
+{ico:"📖",t:"必背知识点＋题库 · 网页版",s:"12 大模块知识点速记＋77 道题（带答案解析）＋2 套完整实操大题。浏览器直接打开，可搜索、可另存为 PDF。",url:BASE+"question-bank.html",act:"在线打开",ext:true},
+{ico:"🖨️",t:"必背知识点＋题库 · A4 打印版",s:"同内容的 PDF 版（横向 24 页，约 4 MB），适合下载打印后纸质刷题。",url:BASE+"print-handbook.pdf",act:"下载 PDF"},
+{ico:"📊",t:"实操素材一：销售数据统计",s:"大题一素材——格式规范 / 函数 / 筛选 / 透视表 / 图表。",url:BASE+"data-sales.xlsx",act:"下载 Excel"},
+{ico:"🧑‍💼",t:"实操素材二：销售经理能力考核表",s:"大题二素材——权重综合评分 / 分级 / 雷达图。",url:BASE+"data-manager.xlsx",act:"下载 Excel"},
+{ico:"🎥",t:"实操素材三：达人信息数据",s:"大题三素材——透视表＋透视图（堆叠条形图）。",url:BASE+"data-influencer.xlsx",act:"下载 Excel"}];
+var resBox=document.getElementById("resBox");
+RES.forEach(function(r){
+  var c=document.createElement("div");c.className="card tip-card";
+  c.innerHTML='<div class="ico">'+r.ico+'</div><div style="flex:1"><b>'+r.t+'</b><p>'+r.s+'</p></div>'+
+    '<a class="tab" style="align-self:center;text-decoration:none;flex:none" href="'+r.url+'"'+(r.ext?' target="_blank" rel="noopener"':' download')+'>'+r.act+'</a>';
+  resBox.appendChild(c);
+});
+
+/* ================= 实操题（答案点击揭晓） ================= */
+var EX=[
+{n:"大题一 · 销售数据统计",f:"data-sales.xlsx",
+ tasks:["基础处理：日期列 yyyy-mm-dd 居中；数量/单价数值格式右对齐；表头深蓝底白字加粗；数据区细边框。",
+ "新增「销售额」=数量×单价(0 位)、「销售提成」用 IF 阶梯：≥10万→5%，5万~10万→3%，<5万→1.5%（2 位）。",
+ "统计行：总数量、平均单价(1 位)、总销售额、总提成(2 位)。",
+ "筛选「华北 且 销售额≥80000」复制到 Sheet2。",
+ "透视表：行=销售区域、列=产品名称、值=销售数量(求和)+销售额(求和)；回答「哪个区域总销售额最高」。",
+ "图表：各区域销售额对比柱形图（设标题/坐标轴/图例）。"],
+ ans:["总销售数量 = 532","平均单价 = 4869.4 元","总销售额 = 2,590,500 元","总提成 = 103,803.0 元","销售额最高的区域 = 华北（1,069,100 元）","「华北 且 ≥80000」共 8 条记录（Sheet2 应正好这么多行）","分产品销售额：笔记本电脑 1,209,000 元；智能手机 949,500 元；平板电脑 432,000 元","月度趋势（折线图）：01 月 353,600 → 02 月 361,200 → 03 月 499,100 → 04 月 429,000 → 05 月 481,000 → 06 月 466,600 元"]},
+{n:"大题二 · 销售经理综合评分＋雷达图",f:"data-manager.xlsx",
+ tasks:["综合评分 = 销售 35% + 沟通 20% + 服务 15% + 协作 10% + 组织 20%，保留 2 位。",
+ "分级：[90,100] 优秀、[80,90) 良好、[0,80) 一般（IF 嵌套或 LOOKUP）。",
+ "同一画布绘制 8 位经理各项能力雷达图：标题、坐标轴范围 [50,100]、图例。"],
+ ans:["王强 91.25 优秀","李敏 88.15 良好","张涛 82.10 良好","陈静 90.80 优秀","刘洋 69.15 一般","赵磊 82.45 良好","孙悦 89.30 良好","周婷 61.40 一般"]},
+{n:"大题三 · 达人透视表＋透视图",f:"data-influencer.xlsx",
+ tasks:["透视表：行=视频类型、列=性别、值=发布数量(求和)，命名为「数据透视表」。",
+ "透视图：堆叠条形图展示统计结果，设标题/坐标轴/图例，命名为「数据透视图」。"],
+ ans:["游戏：男 197 / 女 83 / 合计 280","美妆：男 50 / 女 102 / 合计 152","知识：男 131 / 女 138 / 合计 269","美食：男 157 / 女 135 / 合计 292","旅行：男 194 / 女 179 / 合计 373","合计：男 729 / 女 637 / 总计 1366","提示：合计对不上，多半是「发布数量」被计成计数而非求和——右键值字段→值字段设置→求和。"]}];
+var exBox=document.getElementById("exBox");
+EX.forEach(function(e){
+  var c=document.createElement("div");c.className="card";
+  var tasks=e.tasks.map(function(t,i){return '<div style="display:flex;gap:8px;margin-top:6px"><b style="color:var(--primary);flex:none">'+(i+1)+'.</b><span>'+t+'</span></div>'}).join("");
+  var ans=e.ans.map(function(t){return '<div style="margin-top:4px">· '+t+'</div>'}).join("");
+  c.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><b style="font-size:15.5px">'+e.n+'</b>'+
+    '<a class="tab" style="text-decoration:none" href="'+BASE+e.f+'" download>下载素材</a></div>'+
+    '<div style="margin-top:8px">'+tasks+'</div>'+
+    '<div class="ans-wrap" style="display:none;margin-top:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:12px 14px;font-size:13.5px"><b style="color:#15803d">✅ 答案校验值（关键数值对上即可，不必逐行核对）</b>'+ans+'</div>'+
+    '<button class="tab ans-btn" style="margin-top:12px;background:var(--soft);color:var(--primary)">🙈 先做题 —— 点我核对答案</button>';
+  var btn=c.querySelector(".ans-btn"),wrap=c.querySelector(".ans-wrap");
+  btn.addEventListener("click",function(){
+    var open=wrap.style.display!=="none";
+    wrap.style.display=open?"none":"block";
+    btn.textContent=open?"🙈 先做题 —— 点我核对答案":"👏 再做一遍前，先把答案收起来";
+  });
+  exBox.appendChild(c);
+});
+
+/* ================= 官方入口 ================= */
+var LINKS=[
+["大赛官网","https://www.zlbbda.com.cn/contest"],
+["官方模拟平台（题库/套卷）","https://www.zlbbda.com.cn/studysome/topicbank"],
+["录播课（密码 BBDA2023888）","https://www.zlbbda.com.cn/contestsome/video"],
+["省赛真题讲解","https://www.zlbbda.com.cn/studysome/contestcourse"]];
+var lb=document.getElementById("linksBox");
+LINKS.forEach(function(l){
+  var a=document.createElement("div");a.style.cssText="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--border);font-size:13.8px;flex-wrap:wrap";
+  if(lb.children.length===0)a.style.borderTop="none";
+  a.innerHTML='<span>'+l[0]+'</span><a href="'+l[1]+'" target="_blank" rel="noopener" style="color:var(--primary);word-break:break-all">'+l[1]+'</a>';
+  lb.appendChild(a);
+});
+var ref=document.createElement("div");ref.style.cssText="font-size:12.5px;color:var(--muted);margin-top:10px";
+ref.textContent="参考教材：《大数据分析素养》《大数据分析实务初级教程（Excel 篇）》";
+lb.appendChild(ref);
 </script>
 </body>
 </html>

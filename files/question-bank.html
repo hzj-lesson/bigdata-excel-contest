@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excel赛项省赛 · 必背知识点 + 完整题库</title>
+<style>
+  :root{
+    --pink:#FF8FA3; --blue:#A0D8F1; --yellow:#FFD166; --mint:#A8E6CF; --purple:#B4A7E5;
+    --ink:#2b2f38; --line:#e6e9f0; --bg:#fbfcff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.7}
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 26px 70px}
+  header{background:linear-gradient(120deg,var(--blue),var(--mint) 50%,var(--purple));
+    color:#23303a;border-radius:22px;padding:28px 32px;box-shadow:0 12px 30px rgba(120,160,210,.25)}
+  header h1{margin:0 0 6px;font-size:24px}
+  header .sub{font-size:14px;opacity:.85}
+  .tags{margin-top:10px}
+  .tag{display:inline-block;background:rgba(255,255,255,.55);border:1px solid rgba(0,0,0,.08);
+    border-radius:999px;padding:3px 11px;font-size:12px;margin:4px 6px 0 0}
+  nav{position:sticky;top:0;background:#fff;z-index:5;border:1px solid var(--line);
+    border-radius:14px;padding:10px 14px;margin:22px 0;display:flex;flex-wrap:wrap;gap:8px;
+    box-shadow:0 4px 12px rgba(60,80,140,.06)}
+  nav a{font-size:13px;color:#3a6ea5;text-decoration:none;background:#f1f5fc;border-radius:8px;padding:4px 10px}
+  nav a:hover{background:#e2ecfb}
+  .module{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px 24px;margin:18px 0;
+    box-shadow:0 4px 14px rgba(60,80,140,.05)}
+  .mk{display:inline-block;width:34px;height:34px;border-radius:10px;color:#fff;font-weight:800;
+    display:flex;align-items:center;justify-content:center;font-size:16px;margin-right:10px;flex:0 0 auto}
+  .m1{background:var(--purple)}.m2{background:var(--blue)}.m3{background:var(--pink)}
+  .m4{background:var(--mint);color:#1c5a45}.m5{background:var(--yellow);color:#5a4a00}
+  .m6{background:#7aa7ff}.m7{background:#ff9f7a}.m8{background:#9b8cff}
+  h2{display:flex;align-items:center;font-size:19px;margin:0 0 6px}
+  .kp{background:#f7f9ff;border-left:4px solid var(--blue);border-radius:0 10px 10px 0;
+    padding:10px 14px;margin:10px 0;font-size:14px}
+  .kp b{color:#1f5fb0}
+  .q{background:#fffdf6;border:1px solid #f0e6c8;border-radius:12px;padding:12px 15px;margin:11px 0;font-size:14px}
+  .q .qt{font-weight:600}
+  .q .opt{margin:3px 0 0 2px;color:#444}
+  .q .ans{color:#1c8a5a;font-weight:700;margin-top:6px}
+  .q .ex{color:#8a6d00;font-size:13px;margin-top:3px}
+  .src{font-size:11px;color:#a07;background:#fbeef5;border-radius:6px;padding:1px 7px;margin-left:6px}
+  .src2{font-size:11px;color:#2a7;background:#eafaf2;border-radius:6px;padding:1px 7px;margin-left:6px}
+  .src3{font-size:11px;color:#a70;background:#fdf3e3;border-radius:6px;padding:1px 7px;margin-left:6px}
+  .case{background:linear-gradient(180deg,#fff,#f3fbff);border:1px solid #cfe9fb;border-radius:16px;
+    padding:18px 22px;margin:14px 0}
+  .case h3{margin:0 0 8px;color:#1f5fb0}
+  .case ol{padding-left:22px;margin:6px 0}
+  .case li{margin:6px 0}
+  .note{background:#fff4f6;border:1px dashed var(--pink);border-radius:12px;padding:12px 16px;font-size:13px;margin:14px 0}
+  .foot{margin-top:40px;font-size:12px;color:#9aa0ad;text-align:center}
+  .toc-h{font-size:13px;color:#888;margin:2px 0 0}
+  @media print{
+    body{background:#fff}
+    nav,.foot{display:none!important}
+    .wrap{max-width:100%;padding:0}
+    header{padding:14px 20px;box-shadow:none}
+    header h1{font-size:19px}
+    .module{margin:10px 0;padding:14px 18px;box-shadow:none;break-inside:auto}
+    .q,.case,.kp,.note{break-inside:avoid;page-break-inside:avoid}
+    h2{font-size:16px}
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>奔赴理想 · 筑梦前行｜Excel 赛项省赛 · 必背知识点 + 完整题库</h1>
+  <div class="sub">全国大学生大数据分析技术技能大赛 · Excel 数据分析赛项 · 省级赛（第五届 2026）</div>
+  <div class="tags">
+    <span class="tag">知识点速记</span><span class="tag">真题/竞赛题</span>
+    <span class="tag">答案 + 解析</span><span class="tag">2 套实操大题</span>
+    <span class="tag">约 6 周冲刺可用</span>
+  </div>
+</header>
+
+<nav>
+  <a href="#m1">① 统计基础</a><a href="#m2">② 法律法规</a><a href="#m3">③ 伦理道德</a>
+  <a href="#m4">④ 基础操作</a><a href="#m5">⑤ 函数</a><a href="#m6">⑥ 透视表</a>
+  <a href="#m7">⑦ 图表</a><a href="#m8">⑧ 高级功能</a>
+  <a href="#m9">⑨ 引用与错误值</a><a href="#m10">⑩ 文本日期函数</a>
+  <a href="#m11">⑪ 获取与清洗</a><a href="#m12">⑫ 透视进阶</a>
+  <a href="#c">⑬ 实操大题</a>
+</nav>
+
+<div class="note">📌 <b>题目来源与说明：</b>
+<span class="src">真题</span> 来自官方大赛题库（试题通 Excel-A 组）公开预览；
+<span class="src2">竞赛</span> 来自公开 Excel 数据分析竞赛题（百度文库/人人文库）；
+<span class="src3">生成</span> 依据考纲整理的必考自测题。
+非官方题答案已按 Excel 实际操作核对，个别旧题错误已在解析中纠正。<b>考前务必再刷官方模拟平台</b>：https://www.zlbbda.com.cn/studysome/topicbank</div>
+
+<!-- ① -->
+<div class="module" id="m1">
+  <h2><span class="mk m1">1</span>数据分析基础（统计）</h2>
+  <div class="kp">
+    <b>必背：</b>① 集中趋势——均值(平均)、中位数(中间值，抗极端值)、众数(出现最多)；
+    ② 离散程度——方差(偏离均值平方的平均)、标准差(方差开方)；
+    ③ 数据类型——<b>定性</b>(类别/文本) 与 <b>定量</b>(数值，可计算)；
+    ④ 分布——正态(钟形对称)、偏态(左偏/右偏)；
+    ⑤ 客单价=销售额÷订单数；同比/环比。
+  </div>
+  <div class="q"><div class="qt">1. 一组数据为 {2,4,4,6,8}，其众数、中位数、均值分别是？</div>
+    <div class="opt">A. 4 / 4 / 4.8　B. 4 / 5 / 4.8　C. 2 / 4 / 5　D. 4 / 4 / 5</div>
+    <div class="ans">答案：A</div><div class="ex">解析：众数=4(出现2次)；中位数=排序后第3位=4；均值=(2+4+4+6+8)/5=4.8。</div></div>
+  <div class="q"><div class="qt">2. 当数据存在极端大值（如富豪收入）时，哪个集中趋势指标受影响最大、最不稳健？</div>
+    <div class="opt">A. 中位数　B. 众数　C. 均值　D. 频数</div>
+    <div class="ans">答案：C</div><div class="ex">解析：均值对极端值敏感；中位数、众数更稳健，因此收入类常报"中位数"。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">3. 标准差的含义是？</div>
+    <div class="opt">A. 数据最大值与最小值之差　B. 方差的算术平方根，衡量离散程度　C. 平均值　D. 中位数</div>
+    <div class="ans">答案：B</div><div class="ex">解析：方差=各数据与均值差的平方的平均；标准差=√方差，单位与数据一致，越大越分散。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">4. "客单价"通常指？</div>
+    <div class="opt">A. 总客户数　B. 销售额÷订单数　C. 订单数÷客户数　D. 单价最大值</div>
+    <div class="ans">答案：B</div><div class="ex">解析：客单价=销售额/订单数，是零售分析高频指标。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">5. 相关系数 r 的取值范围与含义是？</div>
+    <div class="opt">A. r∈[-1,1]，越接近±1 线性相关越强　B. r∈[0,100]　C. r 越大均值越大　D. r 只能取 0 或 1</div>
+    <div class="ans">答案：A</div><div class="ex">解析：Excel 用 CORREL 函数计算；r&gt;0 正相关、r&lt;0 负相关、|r| 越接近 1 相关越强。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">6. 判断"广告投入与销售额是否存在线性关系"及强弱，应计算？</div>
+    <div class="opt">A. 方差　B. 相关系数(CORREL)　C. 众数　D. 计数</div>
+    <div class="ans">答案：B</div><div class="ex">解析：相关分析用相关系数；可在散点图添加趋势线看 R²（越接近1拟合越好）。</div><span class="src3">生成</span></div>
+</div>
+
+<!-- ② -->
+<div class="module" id="m2">
+  <h2><span class="mk m2">2</span>数据分析职业法律法规</h2>
+  <div class="kp">
+    <b>必背关键数字/机构：</b>
+    ①《网络安全法》2016 通过，<b>国家网信办</b>统筹协调；
+    ②《个人信息保护法》——处理超 <b>100 万人</b>个人信息或超 <b>10 万</b>敏感信息须设<b>个人信息保护负责人</b>；自动化决策须<b>透明、公平、公正</b>；
+    ③《儿童个人信息网络保护规定》——行业组织推动制定规范，履行<b>社会责任</b>；
+    ④ 数据合规底线：合法、正当、必要、最小化。
+  </div>
+  <div class="q"><div class="qt">1. 为克服自动化决策弊端（信息茧房等），个人信息处理者利用个人信息进行自动化决策，应当？</div>
+    <div class="opt">A. 保证决策的透明度和结果公平、公正　B. 按消费能力差异化定价　C. 保障个人信息安全　D. 禁止滥用个人信息</div>
+    <div class="ans">答案：A</div><div class="ex">解析：《个保法》第24条：自动化决策应保证透明和结果公平、公正，不得实行不合理差别待遇。</div><span class="src">真题</span></div>
+  <div class="q"><div class="qt">2. 根据《网络安全法》，负责统筹协调网络安全工作和相关监督管理工作的国家机构是？</div>
+    <div class="opt">A. 国家网信办　B. 工业和信息化部　C. 科技部　D. 国家安全部</div>
+    <div class="ans">答案：A</div><div class="ex">解析：国家互联网信息办公室（网信办）统筹。</div><span class="src">真题</span></div>
+  <div class="q"><div class="qt">3. 《网络安全法》通过的时间是？</div>
+    <div class="opt">A. 2020年　B. 2019年　C. 2016年　D. 2012年</div>
+    <div class="ans">答案：C</div><div class="ex">解析：2016 年 11 月通过，2017 年 6 月施行。</div><span class="src">真题</span></div>
+  <div class="q"><div class="qt">4. 根据《个人信息保护法》及 GB/T 35273，处理超过多少人的个人信息或超 10 万敏感信息须设个人信息保护负责人？</div>
+    <div class="opt">A. 100万　B. 10万　C. 50万　D. 1万</div>
+    <div class="ans">答案：A</div><div class="ex">解析：一般个人信息 ≥100 万，或敏感信息 ≥10 万，须指定负责人。</div><span class="src">真题</span></div>
+  <div class="q"><div class="qt">5. 根据《儿童个人信息网络保护规定》，鼓励行业组织指导推动制定儿童个人信息保护行业规范，加强行业自律，履行？</div>
+    <div class="opt">A. 主体责任　B. 企业责任　C. 社会责任　D. 政府责任</div>
+    <div class="ans">答案：C</div><div class="ex">解析：行业组织推动自律，履行社会责任。</div><span class="src">真题</span></div>
+  <div class="q"><div class="qt">6. 以下不属于"数据分析职业法律法规"范畴的是？</div>
+    <div class="opt">A. 《个人信息保护法》　B. 《网络安全法》　C. 《数据安全法》　D. 公司内部考勤制度</div>
+    <div class="ans">答案：D</div><div class="ex">解析：前三项为国家法律；考勤属企业内部人事制度，不属数据合规法律。</div><span class="src3">生成</span></div>
+</div>
+
+<!-- ③ -->
+<div class="module" id="m3">
+  <h2><span class="mk m3">3</span>数据分析伦理与职业道德</h2>
+  <div class="kp">
+    <b>必背：</b>① 职业道德伦理表现形式为<b>工作守则/行为守则/服务公约</b>等，<b>劳动合同不是</b>伦理表现形式；
+    ② 职业道德拘束对象主要是<b>特定职业的从业者</b>；
+    ③ 道德调整范围比法律广、无国家强制力、产生早于法律；
+    ④ <b>科技向善</b>：算法推荐不得操纵账号、虚假点赞评论转发、影响舆论或规避监管；
+    ⑤《新一代人工智能治理原则》和谐友好原则：增进人类福祉、符合价值观伦理、保障安全尊重权益、<b>避免数据与平台垄断</b>。
+  </div>
+  <div class="q"><div class="qt">1. 以下不属于职业道德伦理表现形式的是？</div>
+    <div class="opt">A. 工作守则　B. 劳动合同　C. 行为守则　D. 服务公约</div>
+    <div class="ans">答案：B</div><div class="ex">解析：劳动合同是法律关系文件，不是伦理表现形式。</div><span class="src">真题</span></div>
+  <div class="q"><div class="qt">2. 关于道德与法律的区别，表述不正确的是？</div>
+    <div class="opt">A. 道德表现形式不如法律严格　B. 道德调整范围比法律广　C. 法律由国家强制力保障实施　D. 有阶级的社会才有道德规范（道德产生比法律早）</div>
+    <div class="ans">答案：D</div><div class="ex">解析：道德产生早于法律、且原始社会无阶级已有道德；"有阶级才有道德"错误。</div><span class="src">真题</span></div>
+  <div class="q"><div class="qt">3. 职业道德伦理反映特定职业关系，拘束对象主要是？</div>
+    <div class="opt">A. 特定职业的从业者　B. 特定职业的顾客　C. 监管者　D. 全体社会成员</div>
+    <div class="ans">答案：A</div><div class="ex">解析：职业道德约束本行业从业者。</div><span class="src">真题</span></div>
+  <div class="q"><div class="qt">4. 以下不属于"科技向善"要求的是？</div>
+    <div class="opt">A. 遵守法律法规与伦理、公正公平公开透明　B. 坚持主流价值导向、传播正能量　C. 不得危害安全/扰乱秩序/侵权　D. 可利用算法操纵账号、虚假点赞转发以影响舆论</div>
+    <div class="ans">答案：D</div><div class="ex">解析：D 正是被禁止的违规行为。</div><span class="src">真题</span></div>
+  <div class="q"><div class="qt">5. 《新一代人工智能治理原则》"和谐友好"原则不包括？</div>
+    <div class="opt">A. 增进人类共同福祉　B. 符合人类价值观与伦理　C. 保障安全、尊重权益、避免误用　D. 促进共享发展、避免数据与平台垄断</div>
+    <div class="ans">答案：D（注意：D 实际"属于"原则，题问"不包括"→ 选 D 表述为"鼓励开放有序竞争避免垄断"也属原则，故此题标准答案取 D 为命题设定；备考记住"避免垄断"是原则之一）</div>
+    <div class="ex">解析：该题命题将"避免垄断/鼓励开放竞争"列为和谐友好原则内容，问"不包括"时选 D。记忆点：AI 治理强调开放、反垄断、向善。</div><span class="src">真题</span></div>
+</div>
+
+<!-- ④ -->
+<div class="module" id="m4">
+  <h2><span class="mk m4">4</span>Excel 基础操作</h2>
+  <div class="kp">
+    <b>必背：</b>单元格地址=<b>列标+行号</b>(如 A1)；公式以 <b>=</b> 开头；
+    <b>开始</b>选项卡做字体/边框/格式；<b>数据</b>选项卡做排序/筛选/分列/删除重复项/数据验证/分类汇总；
+    <b>插入</b>选项卡建透视表/图表；<b>视图</b>选项卡冻结窗格；
+    自动填充(填充柄)、自动换行(对齐)、合并计算(多区域汇总)、删除重复项、引用他表用 <b>表名!单元格</b>。
+  </div>
+  <div class="q"><div class="qt">1. 在 Excel 中，单元格地址的表示方式是？</div>
+    <div class="opt">A. 行号列标　B. 列标行号　C. 行号　D. 列标</div>
+    <div class="ans">答案：B</div><div class="ex">解析：如 B3 = 第 B 列第 3 行。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">2. 使用公式时，引用单元格数据应以什么符号开头？</div>
+    <div class="opt">A. &　B. #　C. =　D. @</div>
+    <div class="ans">答案：C</div><div class="ex">解析：所有公式/函数以 = 开头。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">3. 要快速查找/高亮某列中的重复数据，最常用的是？</div>
+    <div class="opt">A. 筛选　B. 排序　C. 条件格式(突出显示重复值)　D. 数据验证</div>
+    <div class="ans">答案：C</div><div class="ex">解析：开始→条件格式→突出显示单元格规则→重复值，可一键高亮；"数据→删除重复项"可去重。部分旧题给"筛选"，但高亮重复值标准做法用条件格式。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">4. 要冻结首行/首列以便滚动时保持可见，应使用？</div>
+    <div class="opt">A. 窗口拆分　B. 冻结窗格　C. 筛选　D. 排序</div>
+    <div class="ans">答案：B</div><div class="ex">解析：视图→冻结窗格。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">5. 将两个工作表的数据合并汇总到同一表，可用？</div>
+    <div class="opt">A. 数据透视表　B. 合并计算　C. 数据链接　D. 复制粘贴</div>
+    <div class="ans">答案：B</div><div class="ex">解析：数据→合并计算，可按位置/分类汇总多个区域。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">6. 要删除表中的重复记录，应在哪个选项卡？</div>
+    <div class="opt">A. 开始　B. 数据　C. 插入　D. 审阅</div>
+    <div class="ans">答案：B</div><div class="ex">解析：数据→删除重复项。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">7. 引用其他工作表的数据，单元格地址前应加？</div>
+    <div class="opt">A. 工作表名+!　B. 工作簿名+@　C. 列标　D. 行号</div>
+    <div class="ans">答案：A</div><div class="ex">解析：如 =Sheet2!A1。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">8. 调整行高应拖动哪里？</div>
+    <div class="opt">A. 行号之间　B. 列标之间　C. 单元格边框　D. 工作表标签</div>
+    <div class="ans">答案：A</div><div class="ex">解析：拖动两行号边界。</div><span class="src2">竞赛</span></div>
+</div>
+
+<!-- ⑤ -->
+<div class="module" id="m5">
+  <h2><span class="mk m5">5</span>函数（最高频）</h2>
+  <div class="kp">
+    <b>必背函数：</b>
+    SUM(求和) · AVERAGE(均值) · COUNT(数值计数) · COUNTA(非空计数) · COUNTIF(条件计数) ·
+    SUMIF(条件求和) · <b>SUMIFS/COUNTIFS(多条件求和/计数)</b> · IF(条件) ·
+    <b>IFERROR(容错)</b> · VLOOKUP(垂直查找) · INDEX+MATCH(灵活查找) ·
+    <b>ROUND(四舍五入) · RANK.EQ(排名)</b> ·
+    RAND/RANDBETWEEN(随机) · LEFT/RIGHT/MID(文本) · TEXT/YEAR/MONTH/DATE(日期)。
+  </div>
+  <div class="q"><div class="qt">1. 用于计算平均值的函数是？</div>
+    <div class="opt">A. SUM　B. AVERAGE　C. COUNT　D. MAX</div>
+    <div class="ans">答案：B</div><div class="ex">解析：AVERAGE 求算术平均。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">2. 计算区域中满足给定条件的单元格个数，用？</div>
+    <div class="opt">A. SUM　B. COUNTIF　C. AVERAGE　D. MAX</div>
+    <div class="ans">答案：B</div><div class="ex">解析：COUNTIF(区域,条件)。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">3. 统计指定区域中"非空"单元格数量，用？</div>
+    <div class="opt">A. COUNT　B. COUNTA　C. COUNTBLANK　D. COUNTIF</div>
+    <div class="ans">答案：B</div><div class="ex">解析：COUNTA 计非空；COUNT 只计数值；COUNTBLANK 计空。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">4. A1=SUM(B1:B10)，B1:B10 之和为 50，则 A1 显示？</div>
+    <div class="opt">A. 50　B. 100　C. 0　D. 错误</div>
+    <div class="ans">答案：A</div><div class="ex">解析：单元格显示公式的计算结果 50。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">5. 返回指定范围内随机整数（每次计算变化）的函数是？</div>
+    <div class="opt">A. RAND　B. RANDBETWEEN　C. AND　D. OR</div>
+    <div class="ans">答案：B</div><div class="ex">解析：RANDBETWEEN(下限,上限) 返回随机整数；RAND 返回 0–1 小数。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">6. VLOOKUP 的主要作用是？</div>
+    <div class="opt">A. 按条件查找数据　B. 垂直向下查找首列匹配并返回指定列值　C. 统计个数　D. 求平均</div>
+    <div class="ans">答案：B</div><div class="ex">解析：VLOOKUP(查找值,表阵列,返回列序号,0) 在首列找匹配、返回右侧列值；近似匹配用 1/TRUE，精确用 0/FALSE。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">7. 阶梯提成：销售额≥10万提5%，5–10万提3%，&lt;5万提1.5%。正确公式结构是？</div>
+    <div class="opt">A. =IF(x&gt;=100000,x*5%,IF(x&gt;=50000,x*3%,x*1.5%))　B. =SUM(x*5%)　C. =VLOOKUP(x,...)　D. =AVERAGE(x)</div>
+    <div class="ans">答案：A</div><div class="ex">解析：嵌套 IF 实现多档判断，注意区间边界用 &gt;=。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">8. 要在多条件查找（如按"姓名+月份"取对应值）时最灵活，推荐组合？</div>
+    <div class="opt">A. VLOOKUP 单用　B. INDEX+MATCH　C. COUNT　D. SUM</div>
+    <div class="ans">答案：B</div><div class="ex">解析：INDEX(返回区,MATCH(行条件),MATCH(列条件)) 可做双向查找，比 VLOOKUP 更灵活（不受首列限制）。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">9. 统计"华北区域且产品为笔记本电脑"的销售额之和，应用？</div>
+    <div class="opt">A. SUM　B. SUMIF　C. SUMIFS　D. COUNTIF</div>
+    <div class="ans">答案：C</div><div class="ex">解析：SUMIFS(求和区,条件区1,条件1,条件区2,条件2)，多条件求和必会。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">10. 计算 3.14159 保留 2 位小数，用？</div>
+    <div class="opt">A. =ROUND(3.14159,2)→3.14　B. =INT(3.14159)　C. =TRUNC(3.14159,2)　D. =ROUNDUP(3.14159,2)</div>
+    <div class="ans">答案：A</div><div class="ex">解析：ROUND 四舍五入；ROUNDUP 向上、ROUNDDOWN/TRUNC 向下；INT 取整。实操题"保留2位"均指 ROUND。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">11. 按销售额给销售员排名（第1第2…），用？</div>
+    <div class="opt">A. RANK.EQ(数值,区域,0)　B. MAX　C. AVERAGE　D. COUNTIF</div>
+    <div class="ans">答案：A</div><div class="ex">解析：RANK.EQ 第三参数 0 或省略=降序排名，1=升序；旧版写作 RANK。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">12. VLOOKUP 查不到值时显示"未找到"而不是 #N/A，用？</div>
+    <div class="opt">A. =IFERROR(VLOOKUP(...),"未找到")　B. =SUM　C. =COUNT　D. =TEXT</div>
+    <div class="ans">答案：A</div><div class="ex">解析：IFERROR(公式,出错时返回值) 是最常用容错函数，可包 VLOOKUP/除法等。</div><span class="src3">生成</span></div>
+</div>
+
+<!-- ⑥ -->
+<div class="module" id="m6">
+  <h2><span class="mk m6">6</span>数据透视表</h2>
+  <div class="kp">
+    <b>必背：</b>数据源须为<b>规范 Excel 表格/区域</b>；
+    创建在<b>插入</b>选项卡；四要素=<b>行/列/值/筛选</b>；
+    值汇总方式可切换<b>求和/计数/平均值</b>（易踩坑：该平均时别默认求和）；
+    行标签可<b>排序取前 N</b>；新字段在<b>字段列表</b>勾选；
+    结果可放新工作表或现有工作表（不能跨工作簿）；套用样式美化。
+  </div>
+  <div class="q"><div class="qt">1. 创建数据透视表，数据源必须是？</div>
+    <div class="opt">A. 文本文件　B. 图片　C. Excel 表格/数据区域　D. 网页链接</div>
+    <div class="ans">答案：C</div><div class="ex">解析：透视表基于 Excel 区域或智能表。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">2. 在 Excel 中创建数据透视表，应在哪个选项卡？</div>
+    <div class="opt">A. 开始　B. 插入　C. 数据　D. 审阅</div>
+    <div class="ans">答案：B</div><div class="ex">解析：插入→数据透视表。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">3. 数据透视表不能将结果放置在？</div>
+    <div class="opt">A. 新工作表　B. 现有工作表　C. 图表中　D. 其他工作簿</div>
+    <div class="ans">答案：D</div><div class="ex">解析：透视表结果只能在本工作簿内（新表/现有表）。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">4. 在透视表中添加新字段，应在哪里操作？</div>
+    <div class="opt">A. 数据透视表字段列表　B. 数据源　C. 筛选器　D. 报表筛选</div>
+    <div class="ans">答案：A</div><div class="ex">解析：右侧"字段列表"勾选/拖动字段。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">5. 要统计"各地区各月销售额并取总销售额前 3 的地区"，正确做法？</div>
+    <div class="opt">A. 地区放行、月份放列、销售额放值，再按值降序+值筛选前3　B. 直接排序不分维度　C. 用 COUNTIF　D. 用 VLOOKUP</div>
+    <div class="ans">答案：A</div><div class="ex">解析："前3"要看汇总值，需在行标签值筛选中选"前10项"设为3，且按总计排序而非单月。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">6. 客单价（平均客单）应把值字段汇总方式设为？</div>
+    <div class="opt">A. 求和　B. 计数　C. 平均值　D. 最大值</div>
+    <div class="ans">答案：C</div><div class="ex">解析：高频易错点——平均值类指标必须改"值字段设置"为平均值，默认求和会错。</div><span class="src3">生成</span></div>
+</div>
+
+<!-- ⑦ -->
+<div class="module" id="m7">
+  <h2><span class="mk m7">7</span>图表（选择逻辑）</h2>
+  <div class="kp">
+    <b>必背：</b>柱形图=比较大小；折线图=看趋势；<b>饼图=看占比（类别≤5 最佳）</b>；
+    散点图=看两变量相关；雷达图=多维度能力对比；
+    绘制图表先<b>选中数据区域</b>；类别超 7 个时饼图阅读效率骤降；
+    迷你图=单元格内微型折线/柱；趋势线看预测方向（R² 越接近 1 拟合越好）；组合图+次坐标轴解决量纲不同。
+  </div>
+  <div class="q"><div class="qt">1. 最适合展示不同类别数据"占比"的图表是？</div>
+    <div class="opt">A. 柱形图　B. 折线图　C. 饼图　D. 散点图</div>
+    <div class="ans">答案：C</div><div class="ex">解析：饼图看构成比例；类别多时改条形图更清晰。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">2. 展示 1–6 月销售额"变化趋势"，最直观的是？</div>
+    <div class="opt">A. 柱形图　B. 折线图　C. 饼图　D. 雷达图</div>
+    <div class="ans">答案：B</div><div class="ex">解析：时间序列趋势用折线图。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">3. 比较 6 个城市利润"高低"，合适的是？</div>
+    <div class="opt">A. 簇状柱形图　B. 饼图　C. 折线图　D. 散点图</div>
+    <div class="ans">答案：A</div><div class="ex">解析：分类比较用柱形图。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">4. 展示多位销售经理在 5 项能力上的综合对比，用？</div>
+    <div class="opt">A. 饼图　B. 雷达图　C. 折线图　D. 散点图</div>
+    <div class="ans">答案：B</div><div class="ex">解析：多维能力画像用雷达图（高频难点，须设标题/坐标轴/图例）。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">5. 绘制图表的第一步是？</div>
+    <div class="opt">A. 选图表标题　B. 选中图表数据区域　C. 选图表类型　D. 选位置</div>
+    <div class="ans">答案：B</div><div class="ex">解析：先选中数据区域，再插入图表。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">6. 要在单元格内直接嵌入微型趋势图（不占大图表区），用？</div>
+    <div class="opt">A. 迷你图(折线/柱/盈亏)　B. 数据条　C. 色阶　D. 图标集</div>
+    <div class="ans">答案：A</div><div class="ex">解析：插入→迷你图，放单元格内展示趋势；数据条/色阶属于条件格式。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">7. 散点图基础上想看"销售额随广告费变化的预测方向与拟合度"，应？</div>
+    <div class="opt">A. 添加趋势线并显示 R²　B. 换饼图　C. 加图例　D. 加数据标签</div>
+    <div class="ans">答案：A</div><div class="ex">解析：散点图→添加趋势线，勾选"显示 R²"；R² 越接近 1 线性越强。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">8. 同一图表同时展示"销售额柱形 + 增长率折线"（量纲不同），用？</div>
+    <div class="opt">A. 组合图+次坐标轴　B. 饼图　C. 迷你图　D. 雷达图</div>
+    <div class="ans">答案：A</div><div class="ex">解析：组合图把增长率放次坐标轴，避免柱形把折线压扁。</div><span class="src3">生成</span></div>
+</div>
+
+<!-- ⑧ -->
+<div class="module" id="m8">
+  <h2><span class="mk m8">8</span>高级功能（清洗/验证/汇总/假设）</h2>
+  <div class="kp">
+    <b>必背：</b>高级筛选需先建<b>条件区域</b>；分类汇总前必须先<b>排序</b>、默认汇总方式<b>求和</b>；
+    数据验证(数据→数据验证)做下拉/限制输入；条件格式做数据条/色阶/图标集；
+    假设分析=单变量求解/模拟运算表(数据→模拟分析)；分列(文本转日期)。
+  </div>
+  <div class="q"><div class="qt">1. 要对数据进行"高级筛选"，必须先建立？</div>
+    <div class="opt">A. 条件区域　B. 数据清单　C. 筛选区域　D. 排序区域</div>
+    <div class="ans">答案：A</div><div class="ex">解析：高级筛选需在空白区写条件区域（字段名+条件）。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">2. 使用"分类汇总"前，必须首先对数据？</div>
+    <div class="opt">A. 筛选　B. 排序　C. 求和　D. 计数</div>
+    <div class="ans">答案：B</div><div class="ex">解析：分类汇总按某字段分组，须先按该字段排序。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">3. 分类汇总的默认汇总方式是？</div>
+    <div class="opt">A. 求和　B. 计数　C. 平均值　D. 最大值</div>
+    <div class="ans">答案：A</div><div class="ex">解析：默认"求和"，可在对话框切换计数/平均等。</div><span class="src2">竞赛</span></div>
+  <div class="q"><div class="qt">4. 给某列设置"只能输入男/女"的下拉选择，用？</div>
+    <div class="opt">A. 条件格式　B. 数据验证(数据有效性)　C. 排序　D. 分列</div>
+    <div class="ans">答案：B</div><div class="ex">解析：数据→数据验证→序列，输入"男,女"。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">5. 把"文本格式的日期 20260101"转为真日期，用？</div>
+    <div class="opt">A. 分列→日期　B. 求和　C. 透视表　D. 冻结窗格</div>
+    <div class="ans">答案：A</div><div class="ex">解析：数据→分列→第3步选日期格式，可批量转真日期（清洗高频操作）。</div><span class="src3">生成</span></div>
+</div>
+
+<!-- ⑨ 引用/错误值 -->
+<div class="module" id="m9">
+  <h2><span class="mk m1">9</span>引用方式 / 错误值 / 通配符</h2>
+  <div class="kp">
+    <b>必背：</b>① 引用三类——<b>相对引用 A1</b>(随填充变化)、<b>绝对引用 $A$1</b>(行列锁定，F4 切换)、<b>混合引用 $A1 / A$1</b>；
+    ② 跨表引用 <b>表名!单元格</b>（如 Sheet2!A1）；
+    ③ 通配符 <b>*</b>=任意多个字符、<b>?</b>=单个字符（COUNTIF/VLOOKUP 可用）；
+    ④ 常见错误值：<b>#N/A</b>查不到、<b>#DIV/0!</b>除数为0/空、<b>#VALUE!</b>类型不符、<b>#REF!</b>引用被删、<b>###</b>列太窄、<b>#NAME?</b>名称拼写错。
+  </div>
+  <div class="q"><div class="qt">1. 下拉填充公式时，希望"单价"单元格始终不变，应把引用写为？</div>
+    <div class="opt">A. =B2*C1　B. =B2*$C$1　C. =$B2*C1　D. =B2&C1</div>
+    <div class="ans">答案：B</div><div class="ex">解析：$C$1 绝对引用，行列都锁定；按 F4 可循环切换引用类型（A1→$A$1→A$1→$A1）。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">2. 用 VLOOKUP 时，查找区域应使用绝对引用，否则下拉后区域会"跑掉"。正确写法？</div>
+    <div class="opt">A. =VLOOKUP(A2,$D$2:$F$100,3,0)　B. =VLOOKUP(A2,D2:F100,3,0)　C. =VLOOKUP($A2,D2:F100,3)　D. =VLOOKUP(A2,D2:F100,3,1)</div>
+    <div class="ans">答案：A</div><div class="ex">解析：区域加 $ 锁定 + 第4参数 0 精确匹配，是标准写法。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">3. 单元格显示 #DIV/0!，最可能的原因是？</div>
+    <div class="opt">A. 公式分母为 0 或空单元格　B. 列太窄　C. 找不到查找值　D. 函数名拼错</div>
+    <div class="ans">答案：A</div><div class="ex">解析：#DIV/0!=除数为 0；处理：分母加 IF 判断或 IFERROR 容错。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">4. 统计以"张"开头的姓名数量（如 张三、张伟），用？</div>
+    <div class="opt">A. =COUNTIF(A:A,"张*")　B. =COUNTIF(A:A,"张")　C. =SUM(A:A)　D. =COUNTIF(A:A,"*张*")</div>
+    <div class="ans">答案：A</div><div class="ex">解析："张*"=以张开头；"*张*"=含张；"?"代表单个字符。通配符模糊匹配是高频考点。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">5. 删除引用列后公式报错 #REF!，含义是？</div>
+    <div class="opt">A. 引用无效（被删除）　B. 数据类型错　C. 除数为0　D. 名称不存在</div>
+    <div class="ans">答案：A</div><div class="ex">解析：#REF!=引用了被删除的单元格/区域，需修改公式或撤销删除。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">6. 想让公式结果固定为纯数值（发给别人不因引源变化而变），操作是？</div>
+    <div class="opt">A. 选择性粘贴→值　B. 复制→粘贴　C. 条件格式　D. 排序</div>
+    <div class="ans">答案：A</div><div class="ex">解析：复制公式区→右键选择性粘贴→数值，可去公式留结果；转置也在选择性粘贴里。</div><span class="src3">生成</span></div>
+</div>
+
+<!-- ⑩ 文本/日期函数 -->
+<div class="module" id="m10">
+  <h2><span class="mk m2">10</span>文本与日期函数</h2>
+  <div class="kp">
+    <b>必背：</b>LEFT(从左取)/RIGHT(从右取)/MID(从中间取)；LEN(长度)；TRIM(去前后空格)；CLEAN(去不可见字符)；
+    &amp; 或 CONCATENATE 拼接；TEXT(按格式转文本)；
+    YEAR/MONTH/DAY(提取年/月/日)；TODAY()/NOW()；DATEDIF(算间隔)；DATE(年月日生成日期)。
+  </div>
+  <div class="q"><div class="qt">1. 身份证号在 A2，要提取前 6 位地区代码，用？</div>
+    <div class="opt">A. =LEFT(A2,6)　B. =RIGHT(A2,6)　C. =MID(A2,6,6)　D. =LEN(A2)</div>
+    <div class="ans">答案：A</div><div class="ex">解析：LEFT(文本,字符数)；提取出生日期(第7-14位)用 MID(A2,7,8)。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">2. 把 A2"销售部"与 B2"张三"拼成"销售部-张三"，用？</div>
+    <div class="opt">A. =A2&amp;"-"&amp;B2　B. =A2+B2　C. =SUM(A2,B2)　D. =TEXT(A2,B2)</div>
+    <div class="ans">答案：A</div><div class="ex">解析：&amp; 是文本连接符（也可 CONCATENATE(A2,"-",B2)）。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">3. 日期 2026/9/5 在 A1，要得到年份 2026，用？</div>
+    <div class="opt">A. =YEAR(A1)　B. =MONTH(A1)　C. =DAY(A1)　D. =TEXT(A1,"yyyy")</div>
+    <div class="ans">答案：A（D 也能实现但返回文本）</div><div class="ex">解析：YEAR 返回数值年份；按月汇总常用 MONTH；TEXT(A1,"yyyy-mm") 用于做"年月"分组键。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">4. 单元格文本前后有看不见的空格，导致 VLOOKUP 匹配失败，先要？</div>
+    <div class="opt">A. =TRIM(A2) 去空格　B. =LEN(A2)　C. =UPPER(A2)　D. =MID(A2,1,1)</div>
+    <div class="ans">答案：A</div><div class="ex">解析：TRIM 去掉首尾多余空格（数据清洗必备）；CLEAN 去换行等不可见字符。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">5. 已知出生日期 B2，要算周岁年龄（今天为 2026-09-05），用？</div>
+    <div class="opt">A. =DATEDIF(B2,TODAY(),"y")　B. =YEAR(B2)　C. =B2-TODAY()　D. =MONTH(TODAY())</div>
+    <div class="ans">答案：A</div><div class="ex">解析：DATEDIF(开始,结束,"y") 返回整年数，最稳的算年龄方式。</div><span class="src3">生成</span></div>
+</div>
+
+<!-- ⑪ 数据获取与清洗 -->
+<div class="module" id="m11">
+  <h2><span class="mk m3">11</span>数据获取与清洗（考纲重点）</h2>
+  <div class="kp">
+    <b>必背：</b>导入外部数据：数据→自文本/CSV/自网站/自数据库/自表格；CSV 中文乱码→选 UTF-8(65001) 导入；
+    清洗流程=去重(数据→删除重复项)→缺失值(筛选空白后填充/删除)→纠错(查找替换)→去空格(TRIM)→
+    类型转换(文本数字→数值：分列或乘1；文本日期→真日期：分列选日期)→规范录入(数据验证)。
+  </div>
+  <div class="q"><div class="qt">1. 从 CSV 导入后日期列显示为文本、无法按月汇总，正确做法？</div>
+    <div class="opt">A. 分列→第3步选"日期"格式转真日期　B. 求和　C. 删除该列　D. 改字体</div>
+    <div class="ans">答案：A</div><div class="ex">解析：数据→分列，向导第3步选日期(YMD)，可整列转为真日期（也可用 DATEVALUE）。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">2. 处理数据中的缺失值（空单元格），下列策略最合理的是？</div>
+    <div class="opt">A. 一律删除整行　B. 数值型可用均值/中位数填充，关键记录查证补全，明确缺失率过高的列考虑弃用　C. 填 0　D. 忽略不管</div>
+    <div class="ans">答案：B</div><div class="ex">解析：缺失值处理要看场景：随机缺失可删除行或用均值填充；填0需谨慎（可能扭曲均值）。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">3. 表中有 800 行数据含重复订单，去重后仅剩 600 行，应使用？</div>
+    <div class="opt">A. 数据→删除重复项　B. 条件格式　C. 分列　D. 合并计算</div>
+    <div class="ans">答案：A</div><div class="ex">解析：删除重复项可按单列/多列判断；去重前建议先备份或高亮重复值确认。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">4. 把"以文本存储的数字"(左上角绿三角) 批量转成可计算的数值，最快方式是？</div>
+    <div class="opt">A. 选区域→点黄色感叹号→转换为数字　B. 改字体　C. 排序　D. 冻结窗格</div>
+    <div class="ans">答案：A</div><div class="ex">解析：文本数字用 SUM 会漏计；转换后 VLOOKUP/SUM 才正常（或分列一步完成）。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">5. 排查"两个表同名字段对不上"（如空格/全半角/大小写差异），应优先？</div>
+    <div class="opt">A. TRIM 去空格 + 查找替换统一全半角　B. 直接 VLOOKUP　C. 删除重复项　D. 数据透视</div>
+    <div class="ans">答案：A</div><div class="ex">解析：脏数据常见根源=不可见空格/全半角不一致，先清洗再匹配，否则 VLOOKUP 大量 #N/A。</div><span class="src3">生成</span></div>
+</div>
+
+<!-- ⑫ 透视表进阶 -->
+<div class="module" id="m12">
+  <h2><span class="mk m4">12</span>透视表进阶：值显示方式 / 分组 / 切片器</h2>
+  <div class="kp">
+    <b>必背：</b>值显示方式=占比(总计的百分比/行汇总/列汇总)、差异(与上一项差/百分比，做环比)；日期字段<b>右键组合→按月/季度</b>分组；数值字段可组合成区间；切片器可联动多个透视表；源数据变化后要<b>刷新</b>；透视表与普通表字段不同、勿手动改单元格。
+  </div>
+  <div class="q"><div class="qt">1. 想看"各区域销售额占总体的百分比"，应把值字段设置改为？</div>
+    <div class="opt">A. 值显示方式→总计的百分比　B. 求和　C. 计数　D. 平均值</div>
+    <div class="ans">答案：A</div><div class="ex">解析：值字段设置→值显示方式→"总计的百分比"；列汇总百分比=看结构占比。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">2. 订单明细含每天日期，想按月统计销售额，应在透视表中？</div>
+    <div class="opt">A. 日期字段右键→组合→选"月"　B. 重新录数据　C. 分列　D. 删除日期列</div>
+    <div class="ans">答案：A</div><div class="ex">解析：日期字段右键"组合"，可同时选月/季度/年；前提是日期为真日期。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">3. 想要一个可点击筛选的按钮同时控制两个透视表（如按月份过滤），用？</div>
+    <div class="opt">A. 切片器(连接到两表)　B. 分列　C. 分类汇总　D. 数据验证</div>
+    <div class="ans">答案：A</div><div class="ex">解析：插入→切片器→右键"报表连接"勾选多个透视表即可联动。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">4. 源数据表新增了 200 行，但透视表数字没变，应？</div>
+    <div class="opt">A. 右键透视表→刷新　B. 重开 Excel　C. 改单元格格式　D. 冻结窗格</div>
+    <div class="ans">答案：A</div><div class="ex">解析：透视表不自动更新；若数据范围会持续变化，可把源数据转成"表格(Ctrl+T)"再建透视表。</div><span class="src3">生成</span></div>
+  <div class="q"><div class="qt">5. 想看"本月销售额与上月相比的增减额"，值字段设置用？</div>
+    <div class="opt">A. 值显示方式→差异(基本字段=月份,基本项=上一个)　B. 求和　C. 最大值　D. 计数</div>
+    <div class="ans">答案：A</div><div class="ex">解析："差异/差异百分比"做环比、同比（基本项选上一个或指定月），是分析报告高频动作。</div><span class="src3">生成</span></div>
+</div>
+
+<!-- ⑬ 实操大题 -->
+<div class="module" id="c">
+  <h2><span class="mk m5">13</span>完整实操大题（照着在 Excel 里练）</h2>
+
+  <div class="case">
+    <h3>大题一：销售数据统计（基础+函数+筛选+透视+图表，约 100 分框架）</h3>
+    <p>【素材】自行建"销售数据统计.xlsx"，录入下列字段：日期、产品名称、销售区域、销售人员、销售数量、单价(元)。示例行：</p>
+    <ul>
+      <li>笔记本电脑 / 华北 / 张三；平板电脑 / 华东 / 李四；笔记本电脑 / 华南 / 王五</li>
+      <li>智能手机 / 华北 / 张三；平板电脑 / 西南 / 赵六；智能手机 / 华东 / 李四；笔记本电脑 / 西南 / 赵六</li>
+    </ul>
+    <ol>
+      <li><b>基础处理</b>：日期列格式 yyyy-mm-dd 居中；数量/单价数值格式、右对齐；表头深蓝底白字加粗、行高20；数据区细边框。</li>
+      <li><b>函数</b>：新增"销售额"=数量×单价(0位小数)；"销售提成"用 IF 阶梯：≥10万×5%、5–10万×3%、&lt;5万×1.5%(2位小数)；底部统计行：总数量(SUM)、平均单价(AVERAGE,1位)、总销售额、总提成(2位)。</li>
+      <li><b>筛选</b>：筛出"华北 且 销售额≥80000"的记录，复制到 Sheet2(保留格式)。</li>
+      <li><b>透视表</b>：新建"透视分析"表，行=销售区域、列=产品名称、值=数量(求和)+销售额(求和)；套用样式、数值0位、销售额加"万元"单位；回答"哪个区域总销售额最高"。</li>
+      <li><b>图表</b>：依数据选合适图表(柱/折/饼)，设标题、坐标轴、图例。</li>
+    </ol>
+  </div>
+
+  <div class="case">
+    <h3>大题二：能力考核 + 透视图（权重/分级/雷达图）</h3>
+    <ol>
+      <li><b>权重评分</b>：销售经理综合评分 = 销售能力×35% + 沟通能力×20% + 服务能力×15% + 协作能力×10% + 组织能力×20%，结果保留2位；分级：[90,100]优秀、[80,90)良好、[0,80)一般（用 IF 嵌套或 LOOKUP）。</li>
+      <li><b>雷达图</b>：在同一画布绘制所有经理各项能力评分雷达图，设标题、坐标轴范围[50,100]、图例。</li>
+      <li><b>透视表+透视图</b>：基于"达人信息数据.xlsx"，行=视频类型、列=性别，统计发布数量建透视表；再用堆叠条形图透视<b>图</b>展示，设标题/坐标轴/图例。</li>
+    </ol>
+    <p style="font-size:13px;color:#888">📌 雷达图与"透视表+透视图"组合是省赛高频综合题，务必亲手做一遍，别只看不做。</p>
+  </div>
+</div>
+
+<div class="note">✅ <b>使用建议：</b>① 先通读 8 个模块"必背"速记；② 逐题自测，错题回看解析；③ 大题一/二在 Excel 实测；④ 最后回官方模拟平台 https://www.zlbbda.com.cn/studysome/topicbank 限时刷套卷。法规伦理（模块2/3）性价比最高、最稳，优先背熟。</div>
+
+<div class="foot">资料整理自大赛官网、试题通官方题库预览、百度文库/人人文库公开 Excel 竞赛题（截至 2026-09）。非官方题答案已按实际操作核对；具体以你所在届次官方规程与模拟平台为准。</div>
+
+</div>
+</body>
+</html>
