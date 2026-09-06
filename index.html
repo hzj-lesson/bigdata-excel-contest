@@ -173,6 +173,21 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
       <div class="prog-txt" id="allPct">0%</div>
     </div>
 
+    <div class="card" id="todayCard"></div>
+
+    <h2 class="sec">模块掌握度</h2>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <b style="font-size:15.5px">🎯 各模块正确率（点模块直接去刷）</b>
+        <span style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="tab" id="btnExport" style="background:var(--soft);color:var(--primary)">⬇️ 导出进度</button>
+          <button class="tab" id="btnImport" style="background:var(--soft);color:var(--primary)">⬆️ 导入进度</button>
+          <input type="file" id="fileImport" accept="application/json,.json" style="display:none">
+        </span>
+      </div>
+      <div id="modStat" style="margin-top:10px"></div>
+    </div>
+
     <h2 class="sec">赛事基本信息</h2>
     <div class="card scrolly">
       <table class="tbl">
@@ -234,6 +249,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
 
   <!-- ============ P3 知识点 ============ -->
   <div class="panel" id="p3">
+    <div style="margin-top:4px"><input id="kbSearch" placeholder="🔍 搜索知识点（关键词直达）" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;outline:none;background:var(--card);color:var(--fg)"><div class="prog-txt" id="kbSearchN" style="margin-top:4px"></div></div>
     <h2 class="sec">必背速记 · 12 模块（题库版）</h2>
     <div id="kbBank"></div>
     <h2 class="sec">科目一《数据分析基础知识》</h2>
@@ -429,7 +445,7 @@ function showPanel(pid){
   document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("on",p.id===pid)});
 }
 function goQuiz(mod){
-  qzMod=mod;qzOnlyWrong=false;qzOnlyBook=false;qzOnlyReal=false;qzPos=0;
+  qzMod=mod;qzOnlyWrong=false;qzOnlyBook=false;qzOnlyReal=false;qzOnlyJudge=false;qzOnlyMulti=false;qzPos=0;
   showPanel("p7");renderQzChips();renderQz();
   if(typeof qzApply==="function")qzApply();
   window.scrollTo({top:0,behavior:"smooth"});
@@ -617,13 +633,20 @@ EX.forEach(function(e){
   c.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><b style="font-size:15.5px">'+e.n+'</b>'+
     '<a class="tab" style="text-decoration:none" href="'+BASE+e.f+'" download>下载素材</a></div>'+
     '<div style="margin-top:8px">'+tasks+'</div>'+
-    '<div class="ans-wrap" style="display:none;margin-top:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:12px 14px;font-size:13.5px"><b style="color:#15803d">✅ 答案校验值（关键数值对上即可，不必逐行核对）</b>'+ans+'</div>'+
+    '<div class="ans-wrap" style="display:none;margin-top:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:12px 14px;font-size:13.5px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="color:#15803d">✅ 答案校验值（关键数值对上即可，不必逐行核对）</b><button class="tab copy-ans" style="background:#15803d;color:#fff;font-size:12.5px;padding:4px 12px">📋 一键复制</button></div>'+ans+'</div>'+
     '<button class="tab ans-btn" style="margin-top:12px;background:var(--soft);color:var(--primary)">🙈 先做题 —— 点我核对答案</button>';
   var btn=c.querySelector(".ans-btn"),wrap=c.querySelector(".ans-wrap");
   btn.addEventListener("click",function(){
     var open=wrap.style.display!=="none";
     wrap.style.display=open?"none":"block";
     btn.textContent=open?"🙈 先做题 —— 点我核对答案":"👏 再做一遍前，先把答案收起来";
+  });
+  var cp=c.querySelector(".copy-ans");
+  if(cp)cp.addEventListener("click",function(){
+    var txt=e.ans.join("\n");
+    var done=function(){toast("✅ 答案已复制到剪贴板")};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done)});
+    else fallbackCopy(txt,done);
   });
   exBox.appendChild(c);
 });
@@ -650,6 +673,9 @@ var BOOKN=ALLQ.filter(function(q){return q.b>0}).length;
 var REALN=ALLQ.filter(function(q){return q.s==="真题"||q.s==="官方样题"}).length;
 var JUDGEN=ALLQ.filter(function(q){return q.ty==="judge"}).length;
 var MULTIN=ALLQ.filter(function(q){return q.ty==="multi"}).length;
+var MKEY="excel_contest_mock_v1";
+var mockHist=[];try{mockHist=JSON.parse(localStorage.getItem(MKEY))||[]}catch(e){mockHist=[]}
+function mockHistSave(){try{localStorage.setItem(MKEY,JSON.stringify(mockHist))}catch(e){}}
 var qzMod=0,qzOnlyWrong=false,qzOnlyBook=false,qzOnlyReal=false,qzPos=0,qzOnlyJudge=false,qzOnlyMulti=false,qzMock=false,mock=null;
 
 function qzList(){
@@ -671,6 +697,7 @@ function qzStats(){
   document.getElementById("qzModeReal").textContent="🎯 只看真题（"+REALN+"）";
   document.getElementById("qzModeJudge").textContent="✔️ 判断题（"+JUDGEN+"）";
   document.getElementById("qzModeMulti").textContent="☑️ 多选题（"+MULTIN+"）";
+  if(typeof renderModStat==="function")renderModStat();
 }
 function renderQzChips(){
   var box=document.getElementById("qzChips");box.innerHTML="";
@@ -822,6 +849,16 @@ function submitMock(auto){
     if(ok)sc+=(t==="multi"?2:1);else mock.wrong[q.gid]=1;
   });
   mock.score=sc;
+  var full=mock.list.reduce(function(s2,q2){return s2+(qzType(q2)==="multi"?2:1)},0);
+  var det={judge:[0,0],single:[0,0],multi:[0,0]};
+  mock.list.forEach(function(q2){
+    var t2=qzType(q2);det[t2][0]++;
+    var p2=mock.ans[q2.gid];
+    if(p2!==undefined&&(t2==="multi"?qzSorted(p2)===qzSorted(q2.a):p2===q2.a))det[t2][1]++;
+  });
+  mockHist.unshift({t:new Date().toLocaleString("zh-CN",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}),score:sc,full:full,det:det});
+  if(mockHist.length>30)mockHist.length=30;
+  mockHistSave();
   document.getElementById("qzTools").style.display="flex";
   document.getElementById("qzChips").style.display="flex";
   document.getElementById("qzPrev").style.display="";
@@ -849,6 +886,14 @@ function renderMockResult(){
     html+='<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700"><span>'+nm[t]+'</span><span>'+rc+' / '+n+'（'+pct+'%）</span></div>'+
       '<div class="progbar" style="margin-top:5px"><i style="width:'+pct+'%"></i></div></div>';
   });
+  if(mockHist.length>1){
+    html+='<div style="margin-top:16px"><b style="font-size:14px">📈 历次模拟考（最近 '+Math.min(mockHist.length,8)+' 次，含本次）</b>';
+    mockHist.slice(0,8).forEach(function(h){
+      var pct=h.full?Math.round(h.score/h.full*100):0;
+      html+='<div style="margin-top:6px"><div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--muted)">'+h.t+'</span><span style="font-weight:700">'+h.score+' / '+h.full+'（'+pct+'%）</span></div><div class="progbar" style="margin-top:3px"><i style="width:'+pct+'%"></i></div></div>';
+    });
+    html+='</div>';
+  }
   html+='<div style="margin-top:16px"><b style="font-size:14px">❌ 错题 '+wrongList.length+' 道</b>';
   if(!wrongList.length)html+='<p style="font-size:13px;color:var(--muted);margin-top:6px">全部答对，继续保持！</p>';
   else wrongList.slice(0,40).forEach(function(q){
@@ -861,6 +906,113 @@ function renderMockResult(){
   document.getElementById("mockRetry").addEventListener("click",function(){startMock()});
   document.getElementById("mockBack").addEventListener("click",function(){mock=null;renderQz()});
 }
+/* ============ 总览：模块掌握度 / 今日任务 / 进度备份 ============ */
+function renderModStat(){
+  var box=document.getElementById("modStat");if(!box)return;
+  var rows=QZBANK.map(function(b){
+    var qs=ALLQ.filter(function(q){return q.m===b.n}),dn=0,rt=0;
+    qs.forEach(function(q){var p=qz.done[q.gid];if(p!==undefined){dn++;if(q.ty==="multi"?qzSorted(p)===qzSorted(q.a):p===q.a)rt++;}});
+    return{n:b.n,t:b.t,total:qs.length,done:dn,pct:dn?Math.round(rt/dn*100):null};
+  });
+  var weak=null;
+  rows.forEach(function(r){if(r.done>=5&&r.pct!==null&&(weak===null||r.pct<weak.pct))weak=r;});
+  var html=rows.map(function(r){
+    var pct=r.pct===null?0:r.pct;
+    var color=r.pct===null?"var(--border)":(pct>=80?"var(--ok,#16a34a)":(pct>=60?"#d97706":"#dc2626"));
+    return '<div style="margin-top:7px;cursor:pointer" data-mod="'+r.n+'"><div style="display:flex;justify-content:space-between;font-size:12.5px"><span>'+r.n+'. '+r.t+'</span><span style="color:var(--muted)">'+(r.pct===null?"未开始":("正确率 "+pct+"% · 已刷 "+r.done+"/"+r.total))+'</span></div>'+
+      '<div class="progbar" style="margin-top:3px"><i style="width:'+pct+'%;background:'+color+'"></i></div></div>';
+  }).join("");
+  if(weak)html='<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:8px">🎯 <b>当前弱项：'+weak.n+'. '+weak.t+'（正确率 '+weak.pct+'%）</b>　<button class="tab" id="goWeak" style="background:#dc2626;color:#fff">去专项重练 →</button></div>'+html;
+  box.innerHTML=html;
+  box.querySelectorAll("[data-mod]").forEach(function(el){el.addEventListener("click",function(){goQuiz(+el.dataset.mod)})});
+  var gw=document.getElementById("goWeak");
+  if(gw)gw.addEventListener("click",function(){goQuiz(weak.n)});
+}
+function renderTodayCard(){
+  var box=document.getElementById("todayCard");if(!box)return;
+  var total=0;
+  STAGES.forEach(function(st){total+=st.days.length});
+  var hit=null,dayNo=0,cnt=0;
+  for(var si=0;si<STAGES.length;si++){
+    for(var di=0;di<STAGES[si].days.length;di++){
+      cnt++;
+      if(STAGES[si].days[di][0]===todayStr){hit={s:si,d:di};dayNo=cnt;}
+    }
+  }
+  var html;
+  if(hit){
+    var d=STAGES[hit.s].days[hit.d];
+    html='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:15.5px">📌 今日任务 · 第 '+dayNo+' / '+total+' 天</b><span class="kb-chip chip-know">'+d[3]+'</span></div>'+
+      '<div style="margin-top:8px;font-size:13.8px;line-height:1.8">'+d[4]+'</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'+
+      '<button class="tab" id="tdPlan" style="background:var(--primary);color:#fff">📋 去逐日计划打卡</button>'+
+      '<button class="tab" id="tdGo" style="background:var(--soft);color:var(--primary)">⚡ 联动知识点/刷题</button></div>';
+  }else{
+    var st0=STAGES[0].days[0][0];
+    var eD=STAGES[STAGES.length-1].days,last=eD[eD.length-1][0];
+    var msg=todayStr<st0?("计划将于 "+st0+" 开始——预热期建议先背「知识点」页的必背速记。"):(todayStr>last?("35 天计划已收官，进入自由复习：反复刷错题本＋每天一次「全真模拟考」。"):"今天是休息日（国庆假期），不安排任务——愿意的话随手翻翻错题本即可。");
+    html='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:15.5px">📌 今日</b></div>'+
+      '<div style="margin-top:8px;font-size:13.8px;line-height:1.8">'+msg+'</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="tab" id="tdWrong" style="background:var(--soft);color:var(--primary)">🔁 去刷错题</button></div>';
+  }
+  box.innerHTML=html;
+  var p=document.getElementById("tdPlan");
+  if(p)p.addEventListener("click",function(){
+    showPanel("p2");
+    var el=document.querySelector(".day.today");
+    if(el)setTimeout(function(){el.scrollIntoView({behavior:"smooth",block:"center"})},80);
+  });
+  var g=document.getElementById("tdGo");
+  if(g)g.addEventListener("click",function(){var d=STAGES[hit.s].days[hit.d];dayGo(d[3],d[4])});
+  var w=document.getElementById("tdWrong");
+  if(w)w.addEventListener("click",function(){showPanel("p7");qzOnly("wrong")});
+}
+function fallbackCopy(txt,done){
+  var ta=document.createElement("textarea");ta.value=txt;
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");done();}catch(e){toast("❌ 复制失败，请手动长按复制")}
+  document.body.removeChild(ta);
+}
+function exportProgress(){
+  var data={app:"excel-contest",ver:1,exported:new Date().toISOString(),quiz:qz,plan:state,mock:mockHist};
+  var blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  var d=new Date();
+  a.download="excel备赛进度_"+d.getFullYear()+("0"+(d.getMonth()+1)).slice(-2)+("0"+d.getDate()).slice(-2)+".json";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  toast("✅ 进度已导出（含刷题/打卡/模拟考成绩）");
+}
+function importProgress(file){
+  var rd=new FileReader();
+  rd.onload=function(){
+    try{
+      var data=JSON.parse(rd.result);
+      if(!data||data.app!=="excel-contest")throw new Error("bad");
+      if(!confirm("导入将覆盖当前的全部进度（刷题记录/逐日打卡/模拟考成绩），确定继续？"))return;
+      if(data.quiz)localStorage.setItem(QKEY,JSON.stringify(data.quiz));
+      if(data.plan)localStorage.setItem(KEY,JSON.stringify(data.plan));
+      if(data.mock)localStorage.setItem(MKEY,JSON.stringify(data.mock));
+      toast("✅ 导入成功，正在刷新…");
+      setTimeout(function(){location.reload()},600);
+    }catch(e){toast("❌ 文件无效：请选择本平台导出的 JSON 文件")}
+  };
+  rd.readAsText(file,"utf-8");
+}
+document.getElementById("btnExport").addEventListener("click",exportProgress);
+document.getElementById("btnImport").addEventListener("click",function(){document.getElementById("fileImport").click()});
+document.getElementById("fileImport").addEventListener("change",function(e){if(e.target.files&&e.target.files[0])importProgress(e.target.files[0])});
+var kbSearchEl=document.getElementById("kbSearch");
+if(kbSearchEl)kbSearchEl.addEventListener("input",function(){
+  var q=kbSearchEl.value.trim().toLowerCase();
+  var n=0;
+  document.querySelectorAll("#kbBank .kb,#kbS1 .kb,#kbS2 .kb").forEach(function(el){
+    var ok=!q||el.textContent.toLowerCase().indexOf(q)>=0;
+    el.style.display=ok?"":"none";
+    if(ok&&q)n++;
+  });
+  var nEl=document.getElementById("kbSearchN");
+  if(nEl)nEl.textContent=q?("匹配 "+n+" 个知识点"):"";
+});
 document.getElementById("qzPrev").addEventListener("click",function(){qzPos--;renderQz()});
 document.getElementById("qzNext").addEventListener("click",function(){qzPos++;renderQz()});
 function qzModeBtn(allId,wrongId,bookId,realId,judgeId,multiId){
@@ -903,6 +1055,7 @@ document.getElementById("mockNext").addEventListener("click",function(){if(!mock
 document.getElementById("mockSubmit").addEventListener("click",function(){if(confirm("确定交卷？未作答的题目将计 0 分。"))submitMock(false)});
 document.getElementById("mockExit").addEventListener("click",function(){if(!mock||mock.finished)return;if(confirm("退出模拟考？本次作答不会保存。"))exitMock()});
 renderQzChips();renderQz();
+renderTodayCard();
 
 /* ================= 官方入口 ================= */
 var LINKS=[
