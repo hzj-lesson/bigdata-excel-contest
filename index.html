@@ -441,7 +441,7 @@ function dayMods(tag,task){
   var s=tag+" "+task,mods=[],kbs=[];
   if(/法规|《数据|《网络/.test(s)){return{mods:[2],kbs:["kb1-1"]}}
   if(/伦理|职业|道德/.test(s)){return{mods:[3],kbs:["kb1-2"]}}
-  if(/指标|采集|框架/.test(s)&&/科目一/.test(tag)){return{mods:[1],kbs:["kb1-0"]}}
+  if(/指标|采集|框架/.test(s)&&/科目一/.test(tag)){return{mods:[1,4],kbs:["kb1-0","kb2-0"]}}
   if(/Power Query|导入|CSV/.test(s)){return{mods:[11],kbs:["kb2-1"]}}
   if(/透视/.test(s)){return{mods:[6,12],kbs:["kb2-2","kb2-5"]}}
   if(/图表|迷你图|可视化/.test(s)){return{mods:[7],kbs:["kb2-5"]}}
@@ -461,6 +461,11 @@ function dayMods(tag,task){
 }
 function dayGo(tag,task){
   var s=tag+" "+task;
+  /* 科目日优先联动知识点，避免任务里的「综合/回炉/错题」等词抢走路由 */
+  if(/科目一|科目二/.test(tag)){
+    var m0=dayMods(tag,task);
+    if(m0.mods.length||m0.kbs.length){goKnowledge(m0.mods,m0.kbs);return}
+  }
   if(/整体|官网|大纲|摸底/.test(s)){showPanel("p6");window.scrollTo({top:0,behavior:"smooth"});toast("📌 先下大纲、做摸底题");return}
   if(/模拟|错题|综合|小测|回炉|收心/.test(s)){goQuiz(0);toast("🎯 综合刷题模式：建议按模块过一遍错题");return}
   var m=dayMods(tag,task);
