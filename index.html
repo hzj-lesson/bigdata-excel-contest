@@ -741,7 +741,7 @@ var qzMod=0,qzOnlyWrong=false,qzOnlyBook=false,qzOnlyReal=false,qzPos=0,qzOnlyJu
 
 function qzList(){
   var arr=ALLQ.filter(function(q){return !qzMod||q.m===qzMod});
-  if(qzOnlyWrong)arr=arr.filter(function(q){return qz.wrong[q.gid]});
+  if(qzOnlyWrong)arr=arr.filter(function(q){return qz.wrong[q.gid]}).sort(function(a,b){return (qz.wrong[b.gid]||0)-(qz.wrong[a.gid]||0)});
   if(qzOnlyBook)arr=arr.filter(function(q){return q.b>0});
   if(qzOnlyReal)arr=arr.filter(function(q){return q.s==="真题"||q.s==="官方样题"});
   if(qzOnlyJudge)arr=arr.filter(function(q){return q.ty==="judge"});
@@ -776,7 +776,9 @@ function qzType(q){return q.ty||"single"}
 function qzSorted(a){return String(a).split("").sort().join("")}
 function saveAns(q,ok){
   if(qzMock&&mock){if(ok)delete mock.wrong[q.gid];else mock.wrong[q.gid]=1;return;}
-  if(ok)delete qz.wrong[q.gid];else qz.wrong[q.gid]=1;
+  /* 智能错题本：wrong[gid]=累计错误次数；答对一次递减 1，减到 0 自动出池（错得多排前面、要多答对一次才出池） */
+  if(ok){if(qz.wrong[q.gid]!==undefined){qz.wrong[q.gid]--;if(qz.wrong[q.gid]<=0)delete qz.wrong[q.gid];}}
+  else qz.wrong[q.gid]=(qz.wrong[q.gid]||0)+1;
   qzSave();
 }
 function renderQz(){
@@ -829,7 +831,7 @@ function renderQz(){
     exHtml=pick!==undefined?'<div class="qz-ex"><b>'+(pick===q.a?"✅ 答对了":"❌ 答错了 · 正确答案 "+q.a)+'</b><br>'+q.ex+'</div>':'<div class="prog-txt" style="margin-top:10px">点击选项即判分并显示解析</div>';
   }
   var typeName=(qt==="multi")?" · 多选":((qt==="judge")?" · 判断":"");
-  var head=(qzMock&&mock)?('第 '+(pos+1)+' / '+list.length+' 题 · 全真模拟考'+typeName):('第 '+(pos+1)+' / '+list.length+' 题 · 模块 '+q.m+typeName);
+  var head=(qzMock&&mock)?('第 '+(pos+1)+' / '+list.length+' 题 · 全真模拟考'+typeName):('第 '+(pos+1)+' / '+list.length+' 题 · 模块 '+q.m+typeName+((qzOnlyWrong&&qz.wrong[q.gid]>1)?(' · <b style="color:#dc2626">已错 '+qz.wrong[q.gid]+' 次</b>'):''));
   card.className="card";
   card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px"><span class="prog-txt">'+head+'</span>'+srcTag+'</div>'+
     '<div style="font-size:15px;font-weight:700;line-height:1.8">'+q.q+'</div>'+
