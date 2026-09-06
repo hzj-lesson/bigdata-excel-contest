@@ -76,6 +76,9 @@ h2.sec::before{content:"";width:4px;height:20px;border-radius:2px;background:lin
 .mile .s{font-size:12px;opacity:.85;margin-top:4px}
 /* knowledge accordion */
 .kb{border:1px solid var(--border);border-radius:14px;background:var(--card);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+#kbBank,#kbS1,#kbS2{display:flex;flex-direction:column}
+#kbBank .kb,#kbS1 .kb,#kbS2 .kb{order:999}
+.kb-sched{background:#e0e7ff;color:#4338ca;white-space:nowrap}
 .kb-head{padding:14px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
 .kb-head:hover{background:var(--soft)}
 .kb-head .arrow{margin-left:auto;color:var(--muted);transition:.2s;font-size:13px}
@@ -561,13 +564,30 @@ rest.innerHTML='<div class="rest-day">🏖️ <b>国庆假期（10 月 1 日—7
 planBox.appendChild(rest);
 
 /* ================= 知识点渲染 ================= */
+/* KB_SCHED：知识点/必背速记在逐日计划中的首学位置（gen_kb_sched.js 实跑 dayMods 生成），按此排序展示 */
+var KB_SCHED=/*KB_SCHED*/{"kb":{"kb1-0":{"dayNo":2,"md":"9月6日","tag":"科目一(一)1-2"},"kb2-0":{"dayNo":2,"md":"9月6日","tag":"科目一(一)1-2"},"kb2-2":{"dayNo":3,"md":"9月7日","tag":"科目一(一)3"},"kb2-3":{"dayNo":9,"md":"9月13日","tag":"科目二(四)"},"kb2-5":{"dayNo":15,"md":"9月19日","tag":"科目二(三)"},"kb2-1":{"dayNo":25,"md":"9月29日","tag":"科目二(二)"},"kb1-1":{"dayNo":28,"md":"10月9日","tag":"科目一(二)"},"kb1-2":{"dayNo":30,"md":"10月11日","tag":"科目一(三)"},"kb2-4":{"dayNo":33,"md":"10月14日","tag":"科目二(五)"}},"mod":{"1":{"dayNo":2,"md":"9月6日","tag":"科目一(一)1-2"},"2":{"dayNo":28,"md":"10月9日","tag":"科目一(二)"},"3":{"dayNo":30,"md":"10月11日","tag":"科目一(三)"},"4":{"dayNo":2,"md":"9月6日","tag":"科目一(一)1-2"},"5":{"dayNo":3,"md":"9月7日","tag":"科目一(一)3"},"6":{"dayNo":15,"md":"9月19日","tag":"科目二(三)"},"7":{"dayNo":22,"md":"9月26日","tag":"科目二(四)"},"8":{"dayNo":11,"md":"9月15日","tag":"科目二(三)"},"9":{"dayNo":3,"md":"9月7日","tag":"科目一(一)3"},"10":{"dayNo":6,"md":"9月10日","tag":"科目二(三)"},"11":{"dayNo":11,"md":"9月15日","tag":"科目二(三)"},"12":{"dayNo":15,"md":"9月19日","tag":"科目二(三)"}}};
+function kbSchedData(key){
+  if(typeof KB_SCHED==="undefined"||!key)return null;
+  if(KB_SCHED.kb&&KB_SCHED.kb[key])return KB_SCHED.kb[key];
+  if(KB_SCHED.mod&&key.indexOf("bank-")===0&&KB_SCHED.mod[key.slice(5)])return KB_SCHED.mod[key.slice(5)];
+  return null;
+}
+function kbSchedBadge(key){
+  var s=kbSchedData(key);
+  return s?'<span class="kb-chip kb-sched">📅 计划第 '+s.dayNo+' 天 · '+s.md+'</span>':"";
+}
+function kbSchedOrder(key){
+  var s=kbSchedData(key);
+  return s?s.dayNo:999;
+}
 function renderKB(list,mount,prefix){
   list.forEach(function(k,i){
     var el=document.createElement("div");el.className="kb";el.id=prefix+"-"+i;
+    el.style.order=kbSchedOrder(prefix+"-"+i);
     var chipClass=k.chip==="掌握"?"chip-master":(k.chip==="熟悉"?"chip-familiar":"chip-know");
     var hot=k.hot?' <span class="kb-chip" style="background:#fee2e2;color:#b91c1c">实操高频</span>':"";
     var rows=k.rows.map(function(r){return '<div class="row"><div class="k">'+r[0]+'</div><div class="v'+(r[0]==="Excel 落地"?" excel":"")+(r[0]==="考试提示"?" tip":"")+'">'+r[1]+'</div></div>'}).join("");
-    el.innerHTML='<div class="kb-head"><span class="kb-title">'+k.t+'</span><span class="kb-chip '+chipClass+'">'+k.chip+'</span>'+hot+'<span class="arrow">▶</span></div><div class="kb-body">'+rows+'</div>';
+    el.innerHTML='<div class="kb-head"><span class="kb-title">'+k.t+'</span>'+kbSchedBadge(prefix+"-"+i)+'<span class="kb-chip '+chipClass+'">'+k.chip+'</span>'+hot+'<span class="arrow">▶</span></div><div class="kb-body">'+rows+'</div>';
     el.querySelector(".kb-head").addEventListener("click",function(){el.classList.toggle("open")});
     document.getElementById(mount).appendChild(el);
   });
@@ -655,7 +675,8 @@ EX.forEach(function(e){
 var kbBank=document.getElementById("kbBank");
 QZBANK.forEach(function(b){
   var el=document.createElement("div");el.className="kb";el.id="bank-"+b.n;
-  el.innerHTML='<div class="kb-head"><span class="kb-title">'+b.n+'. '+b.t+'</span><span class="kb-chip chip-familiar">'+b.qs.length+' 题</span><span class="arrow">▶</span></div><div class="kb-body"><div class="row"><div class="k">必背</div><div class="v excel">'+b.note+'</div></div><div class="row"><div class="k">练一练</div><div class="v"><button class="tab" style="background:var(--soft);color:var(--primary)">🎯 刷本模块 '+b.qs.length+' 题</button></div></div></div>';
+  el.style.order=kbSchedOrder("bank-"+b.n);
+  el.innerHTML='<div class="kb-head"><span class="kb-title">'+b.n+'. '+b.t+'</span>'+kbSchedBadge("bank-"+b.n)+'<span class="kb-chip chip-familiar">'+b.qs.length+' 题</span><span class="arrow">▶</span></div><div class="kb-body"><div class="row"><div class="k">必背</div><div class="v excel">'+b.note+'</div></div><div class="row"><div class="k">练一练</div><div class="v"><button class="tab" style="background:var(--soft);color:var(--primary)">🎯 刷本模块 '+b.qs.length+' 题</button></div></div></div>';
   el.querySelector(".kb-head").addEventListener("click",function(){el.classList.toggle("open")});
   el.querySelector("button").addEventListener("click",function(){goQuiz(b.n)});
   kbBank.appendChild(el);
