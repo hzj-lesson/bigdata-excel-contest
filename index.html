@@ -76,8 +76,10 @@ h2.sec::before{content:"";width:4px;height:20px;border-radius:2px;background:lin
 .mile .s{font-size:12px;opacity:.85;margin-top:4px}
 /* knowledge accordion */
 .kb{border:1px solid var(--border);border-radius:14px;background:var(--card);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
-#kbBank,#kbS1,#kbS2{display:flex;flex-direction:column}
-#kbBank .kb,#kbS1 .kb,#kbS2 .kb{order:999}
+#kbAll{display:flex;flex-direction:column}
+#kbAll .kb{order:999}
+.kb-group{font-weight:700;font-size:14px;color:var(--primary);background:var(--soft);padding:9px 14px;border-radius:10px;margin:16px 0 4px;cursor:default;display:flex;align-items:center;gap:6px}
+.kb-group:first-child{margin-top:4px}
 .kb-sched{background:#e0e7ff;color:#4338ca;white-space:nowrap}
 .kb-head{padding:14px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
 .kb-head:hover{background:var(--soft)}
@@ -253,12 +255,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
   <!-- ============ P3 知识点 ============ -->
   <div class="panel" id="p3">
     <div style="margin-top:4px"><input id="kbSearch" placeholder="🔍 搜索知识点（关键词直达）" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;outline:none;background:var(--card);color:var(--fg)"><div class="prog-txt" id="kbSearchN" style="margin-top:4px"></div></div>
-    <h2 class="sec">必背速记 · 12 模块（题库版）</h2>
-    <div id="kbBank"></div>
-    <h2 class="sec">科目一《数据分析基础知识》</h2>
-    <div id="kbS1"></div>
-    <h2 class="sec">科目二《数据分析专业能力》（Excel 落地）</h2>
-    <div id="kbS2"></div>
+    <h2 class="sec">📚 知识点 · 按逐日计划天数排列</h2>
+    <div id="kbAll"></div>
   </div>
 
   <!-- ============ P7 在线刷题 ============ -->
@@ -612,27 +610,23 @@ function kbSchedOrder(key){
   var s=kbSchedData(key);
   return s?s.dayNo:999;
 }
-function renderKB(list,mount,prefix){
-  list.forEach(function(k,i){
-    var el=document.createElement("div");el.className="kb";el.id=prefix+"-"+i;
-    el.style.order=kbSchedOrder(prefix+"-"+i);
-    var chipClass=k.chip==="掌握"?"chip-master":(k.chip==="熟悉"?"chip-familiar":"chip-know");
-    var hot=k.hot?' <span class="kb-chip" style="background:#fee2e2;color:#b91c1c">实操高频</span>':"";
-    var rows=k.rows.map(function(r){return '<div class="row"><div class="k">'+r[0]+'</div><div class="v'+(r[0]==="Excel 落地"?" excel":"")+(r[0]==="考试提示"?" tip":"")+'">'+r[1]+'</div></div>'}).join("");
-    var qm=(typeof KB_QUIZ!=="undefined")&&KB_QUIZ[prefix+"-"+i];
-    var quizRow="";
-    if(qm&&qm.length){
-      var qn=QZBANK.filter(function(b){return qm.indexOf(b.n)>=0}).reduce(function(s2,b){return s2+b.qs.length},0);
-      quizRow='<div class="row"><div class="k">练一练</div><div class="v"><button class="tab kb-quiz" style="background:var(--soft);color:var(--primary)">🎯 去刷配套题 · 模块'+qm.join('、')+'（共 '+qn+' 题）</button></div></div>';
-    }
-    el.innerHTML='<div class="kb-head"><span class="kb-title">'+k.t+'</span>'+kbSchedBadge(prefix+"-"+i)+'<span class="kb-chip '+chipClass+'">'+k.chip+'</span>'+hot+'<span class="arrow">▶</span></div><div class="kb-body">'+rows+quizRow+'</div>';
-    el.querySelector(".kb-head").addEventListener("click",function(){el.classList.toggle("open")});
-    var qbtn=el.querySelector(".kb-quiz");
-    if(qbtn)qbtn.addEventListener("click",(function(mm){return function(){goQuiz(mm[0]);if(mm.length>1)toast("该主题另含模块 "+mm.slice(1).join("、")+"，可稍后切换练习")}})(qm));
-    document.getElementById(mount).appendChild(el);
-  });
+function makeKBEl(k,i,prefix){
+  var el=document.createElement("div");el.className="kb";el.id=prefix+"-"+i;
+  var chipClass=k.chip==="掌握"?"chip-master":(k.chip==="熟悉"?"chip-familiar":"chip-know");
+  var hot=k.hot?' <span class="kb-chip" style="background:#fee2e2;color:#b91c1c">实操高频</span>':"";
+  var rows=k.rows.map(function(r){return '<div class="row"><div class="k">'+r[0]+'</div><div class="v'+(r[0]==="Excel 落地"?" excel":"")+(r[0]==="考试提示"?" tip":"")+'">'+r[1]+'</div></div>'}).join("");
+  var qm=(typeof KB_QUIZ!=="undefined")&&KB_QUIZ[prefix+"-"+i];
+  var quizRow="";
+  if(qm&&qm.length){
+    var qn=QZBANK.filter(function(b){return qm.indexOf(b.n)>=0}).reduce(function(s2,b){return s2+b.qs.length},0);
+    quizRow='<div class="row"><div class="k">练一练</div><div class="v"><button class="tab kb-quiz" style="background:var(--soft);color:var(--primary)">🎯 去刷配套题 · 模块'+qm.join('、')+'（共 '+qn+' 题）</button></div></div>';
+  }
+  el.innerHTML='<div class="kb-head"><span class="kb-title">'+k.t+'</span>'+kbSchedBadge(prefix+"-"+i)+'<span class="kb-chip '+chipClass+'">'+k.chip+'</span>'+hot+'<span class="arrow">▶</span></div><div class="kb-body">'+rows+quizRow+'</div>';
+  el.querySelector(".kb-head").addEventListener("click",function(){el.classList.toggle("open")});
+  var qbtn=el.querySelector(".kb-quiz");
+  if(qbtn)qbtn.addEventListener("click",(function(mm){return function(){goQuiz(mm[0]);if(mm.length>1)toast("该主题另含模块 "+mm.slice(1).join("、")+"，可稍后切换练习")}})(qm));
+  return el;
 }
-renderKB(KB1,"kbS1","kb1");renderKB(KB2,"kbS2","kb2");
 
 /* ================= 进度刷新（逐日计划） ================= */
 function refreshProg(){
@@ -711,16 +705,36 @@ EX.forEach(function(e){
   exBox.appendChild(c);
 });
 
-/* ================= 必背速记渲染 ================= */
-var kbBank=document.getElementById("kbBank");
-QZBANK.forEach(function(b){
-  var el=document.createElement("div");el.className="kb";el.id="bank-"+b.n;
-  el.style.order=kbSchedOrder("bank-"+b.n);
-  el.innerHTML='<div class="kb-head"><span class="kb-title">'+b.n+'. '+b.t+'</span>'+kbSchedBadge("bank-"+b.n)+'<span class="kb-chip chip-familiar">'+b.qs.length+' 题</span><span class="arrow">▶</span></div><div class="kb-body"><div class="row"><div class="k">必背</div><div class="v excel">'+b.note+'</div></div><div class="row"><div class="k">练一练</div><div class="v"><button class="tab" style="background:var(--soft);color:var(--primary)">🎯 刷本模块 '+b.qs.length+' 题</button></div></div></div>';
-  el.querySelector(".kb-head").addEventListener("click",function(){el.classList.toggle("open")});
-  el.querySelector("button").addEventListener("click",function(){goQuiz(b.n)});
-  kbBank.appendChild(el);
-});
+/* ================= 知识点统一渲染（按逐日计划天数分组排序） ================= */
+function renderKBAll(){
+  var kbAll=document.getElementById("kbAll");
+  var cards=[];
+  QZBANK.forEach(function(b){
+    var el=document.createElement("div");el.className="kb";el.id="bank-"+b.n;
+    el.innerHTML='<div class="kb-head"><span class="kb-title">'+b.n+'. '+b.t+'</span>'+kbSchedBadge("bank-"+b.n)+'<span class="kb-chip chip-familiar">'+b.qs.length+' 题</span><span class="arrow">▶</span></div><div class="kb-body"><div class="row"><div class="k">必背</div><div class="v excel">'+b.note+'</div></div><div class="row"><div class="k">练一练</div><div class="v"><button class="tab" style="background:var(--soft);color:var(--primary)">🎯 刷本模块 '+b.qs.length+' 题</button></div></div></div>';
+    el.querySelector(".kb-head").addEventListener("click",function(){el.classList.toggle("open")});
+    el.querySelector("button").addEventListener("click",function(){goQuiz(b.n)});
+    cards.push({el:el,key:"bank-"+b.n});
+  });
+  KB1.forEach(function(k,i){cards.push({el:makeKBEl(k,i,"kb1"),key:"kb1-"+i});});
+  KB2.forEach(function(k,i){cards.push({el:makeKBEl(k,i,"kb2"),key:"kb2-"+i});});
+  /* 按 dayNo 升序（无计划日的排最后），同天按 id 稳定排序 */
+  cards.sort(function(a,b){var da=kbSchedOrder(a.key),db=kbSchedOrder(b.key);return da!==db?da-db:(a.key<b.key?-1:1);});
+  var cur=-1;
+  cards.forEach(function(c){
+    var d=kbSchedOrder(c.key);
+    if(d!==cur){
+      cur=d;
+      var sd=kbSchedData(c.key);
+      var title = d>=999 ? "📅 专项训练（未排入逐日计划）"
+        : ("📅 计划第 "+d+" 天"+(sd?" · "+sd.md+" · "+sd.tag:""));
+      var gh=document.createElement("div");gh.className="kb-group";gh.id="kbgrp-"+d;gh.textContent=title;
+      kbAll.appendChild(gh);
+    }
+    kbAll.appendChild(c.el);
+  });
+}
+renderKBAll();
 
 /* ================= 在线刷题 ================= */
 var QKEY="excel_contest_quiz_v1";
@@ -1079,10 +1093,16 @@ var kbSearchEl=document.getElementById("kbSearch");
 if(kbSearchEl)kbSearchEl.addEventListener("input",function(){
   var q=kbSearchEl.value.trim().toLowerCase();
   var n=0;
-  document.querySelectorAll("#kbBank .kb,#kbS1 .kb,#kbS2 .kb").forEach(function(el){
+  document.querySelectorAll("#kbAll .kb").forEach(function(el){
     var ok=!q||el.textContent.toLowerCase().indexOf(q)>=0;
     el.style.display=ok?"":"none";
     if(ok&&q)n++;
+  });
+  /* 搜索时：隐藏其下无可见卡片的分组标题 */
+  document.querySelectorAll("#kbAll .kb-group").forEach(function(g){
+    var sib=g.nextElementSibling,vis=false;
+    while(sib&&sib.classList&&sib.classList.contains("kb")){ if(sib.style.display!=="none"){vis=true;break;} sib=sib.nextElementSibling; }
+    g.style.display=(q&&!vis)?"none":"";
   });
   var nEl=document.getElementById("kbSearchN");
   if(nEl)nEl.textContent=q?("匹配 "+n+" 个知识点"):"";
