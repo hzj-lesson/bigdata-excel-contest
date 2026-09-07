@@ -145,6 +145,9 @@ a.anc:hover{text-decoration:underline}
     <button class="tbtn" id="expandAll">展开全部知识点</button>
     <button class="tbtn" id="collapseAll">收起全部</button>
     <button class="tbtn" id="clearWrong">清空错题标记</button>
+    <button class="tbtn" id="btnMock2" style="border-color:var(--primary);color:var(--primary);font-weight:700">🎯 全真模拟考</button>
+    <button class="tbtn" id="btnRedo">🔁 重练错题</button>
+    <button class="tbtn" id="btnSync2">🔄 换设备同步</button>
   </div>
 
   <div class="sec">🛤️ 学习路线 <small>从第一个知识点到最后一个，按备考天数排列</small></div>
@@ -300,6 +303,245 @@ refreshProg();refreshWrong();
 document.getElementById("expandAll").onclick=function(){document.querySelectorAll(".unit").forEach(function(u){u.classList.add("open");});};
 document.getElementById("collapseAll").onclick=function(){document.querySelectorAll(".unit").forEach(function(u){u.classList.remove("open");});};
 document.getElementById("clearWrong").onclick=function(){wrong={};save();refreshWrong();document.querySelectorAll(".mini").forEach(function(b){if(b.textContent.indexOf("已标记")>=0){b.classList.remove("on");b.textContent="🔖 标记错题";}});toast("已清空错题标记");};
+
+
+/* ===== 2026-09-07 增强：全真模拟考 · 错题重练 · 换设备同步码（不改动原有逻辑，只追加） ===== */
+function qKind(q){return q.type==="multi"?"multi":((q.type==="judge"||(q.o&&q.o.length===2&&(q.o[0]==="正确"||q.o[0]==="错误")))?"judge":"single");}
+function correctIdx(q){var r=[];q.o.forEach(function(o,i){if(isAns(q,i))r.push(i);});return r;}
+function allPool(){var seen={},pool=[];
+  DATA.units.forEach(function(u){(u.qs||[]).forEach(function(q){if(!seen[q.id]){seen[q.id]=1;pool.push(q);}});});
+  (DATA.practices||[]).forEach(function(p){(p.qs||[]).forEach(function(q){if(!seen[q.id]){seen[q.id]=1;pool.push(q);}});});
+  return pool;}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+/* ---------- 全真模拟考 ---------- */
+var MKEY="excel_route_mock_v2";
+var mockHist=[];try{mockHist=JSON.parse(localStorage.getItem(MKEY))||[]}catch(e){}
+var mock=null,mockTimer=null;
+function startMock(){
+  if(mock&&!mock.finished){if(!confirm("已有一场进行中的模拟考，重新开始将丢弃该场作答？"))return;clearInterval(mockTimer);}
+  var by={judge:[],single:[],multi:[]};
+  allPool().forEach(function(q){by[qKind(q)].push(q);});
+  if(by.judge.length<10||by.single.length<40||by.multi.length<10){toast("题库不足，无法组卷");return;}
+  mock={list:shuffle(by.judge).slice(0,10).concat(shuffle(by.single).slice(0,40),shuffle(by.multi).slice(0,10)),ans:{},pos:0,end:Date.now()+100*60*1000,finished:false};
+  renderMock();mockTimer=setInterval(mockTick,1000);mockTick();
+}
+function mockOvEl(){var ov=document.getElementById("mockOv");
+  if(!ov){ov=document.createElement("div");ov.id="mockOv";ov.style.cssText="position:fixed;inset:0;background:rgba(15,30,60,.55);z-index:998;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow:auto";document.body.appendChild(ov);}return ov;}
+function mockTick(){
+  var el=document.getElementById("mockClock");if(!el||!mock||mock.finished)return;
+  var d=mock.end-Date.now();
+  if(d<=0){toast("⏰ 时间到，自动交卷");submitMock();return;}
+  el.textContent="⏳ "+Math.floor(d/6e4)+":"+("0"+Math.floor(d%6e4/1e3)).slice(-2);
+}
+function mockPick(el){
+  if(!mock||mock.finished)return;
+  var q=mock.list[mock.pos],t=qKind(q),i=+el.dataset.i;
+  if(t==="multi"){
+    var cur=(mock.ans[q.id]||[]).slice(),k=cur.indexOf(i);
+    if(k>=0)cur.splice(k,1);else cur.push(i);
+    mock.ans[q.id]=cur;
+    el.classList.toggle("sel");
+  }else{
+    mock.ans[q.id]=i;
+    var box=el.closest(".opts");
+    box.querySelectorAll(".opt").forEach(function(o){o.classList.remove("sel");});
+    el.classList.add("sel");
+  }
+}
+function mockNav(d){if(!mock||mock.finished)return;mock.pos=Math.max(0,Math.min(mock.list.length-1,mock.pos+d));renderMock();}
+function mockGrade(){
+  if(!mock||mock.finished)return;
+  var q=mock.list[mock.pos];
+  if(!Array.isArray(mock.ans[q.id])||!mock.ans[q.id].length){toast("请先选择至少一个选项");return;}
+  mockNav(1);
+}
+function renderMock(){
+  var ov=mockOvEl();
+  var q=mock.list[mock.pos],t=qKind(q);
+  var ans=mock.ans[q.id];
+  var opts=q.o.map(function(o,i){
+    var sel=(t==="multi")?(Array.isArray(ans)&&ans.indexOf(i)>=0):(ans===i);
+    return '<div class="opt'+(sel?" sel":"")+'" data-i="'+i+'" onclick="mockPick(this)"><span class="lk">'+optLetter(i)+'</span><span>'+esc(o)+'</span></div>';
+  }).join("");
+  ov.innerHTML='<div class="card" style="max-width:660px;width:100%;margin-top:18px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>🎯 全真模拟考 · 第 '+(mock.pos+1)+' / '+mock.list.length+' 题 · '+(t==="multi"?"多选（每题 2 分）":(t==="judge"?"判断":"单选"))+'</b><b id="mockClock" style="color:var(--err)"></b></div>'+
+    '<div class="qt" style="margin-top:12px;font-weight:700;font-size:15px;line-height:1.8">'+esc(q.q)+'</div>'+
+    '<div class="opts" style="margin-top:10px">'+opts+'</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">'+
+      (t==="multi"?'<button class="tbtn" onclick="mockGrade()">✅ 锁定本题</button>':'')+
+      '<button class="tbtn" onclick="mockNav(-1)">← 上一题</button><button class="tbtn" onclick="mockNav(1)">下一题 →</button>'+
+      '<button class="tbtn" id="mockSubmitBtn" style="border-color:var(--err);color:var(--err)">🏁 交卷</button>'+
+      '<button class="tbtn" onclick="exitMock()">退出</button>'+
+    '</div>'+
+    '<div class="note" style="margin-top:10px">判断 10＋单选 40＋多选 10＝60 题 · 满分 70 · 限时 100 分钟 · 一等奖目标线 62 分。作答自动暂存，交卷前可返回修改。</div>'+
+  '</div>';
+  document.getElementById("mockSubmitBtn").onclick=function(){if(confirm("确定交卷？未作答的题计 0 分。"))submitMock();};
+}
+function exitMock(){
+  if(!mock)return;
+  if(!mock.finished&&!confirm("退出模拟考？本次作答不会保存。"))return;
+  clearInterval(mockTimer);mock=null;
+  var ov=document.getElementById("mockOv");if(ov&&ov.parentNode)ov.parentNode.removeChild(ov);
+}
+function submitMock(){
+  if(!mock||mock.finished)return;
+  clearInterval(mockTimer);mock.finished=true;
+  var sc=0,by={single:[0,0],judge:[0,0],multi:[0,0]},wrongs=[];
+  mock.list.forEach(function(q){
+    var t=qKind(q),a=mock.ans[q.id],ci=correctIdx(q),ok=false;
+    if(t==="multi"){ok=Array.isArray(a)&&a.length===ci.length&&ci.every(function(i){return a.indexOf(i)>=0;});if(ok)sc+=2;}
+    else{ok=a===ci[0];if(ok)sc+=1;}
+    by[t][0]++;if(ok)by[t][1]++;else wrongs.push(q);
+  });
+  wrongs.forEach(function(q){wrong[q.id]=1;});save();refreshWrong();
+  mockHist.push({score:sc,at:new Date().toISOString()});try{localStorage.setItem(MKEY,JSON.stringify(mockHist))}catch(e){}
+  var pct=function(n,t){return t?Math.round(n/t*100):0;};
+  var list=wrongs.map(function(q){
+    var t=qKind(q),a=mock.ans[q.id];
+    var yours=(t==="multi")?(Array.isArray(a)?a.map(optLetter).join("、"):"未答"):(a!==undefined?optLetter(a):"未答");
+    var right=correctIdx(q).map(optLetter).join("、");
+    return '<div style="padding:8px 0;border-top:1px solid var(--border)"><b style="font-size:13.5px">'+esc(q.q)+'</b>'+
+      '<div style="font-size:12.5px;margin-top:4px">你的答案 <b style="color:var(--err)">'+esc(yours)+'</b> ｜ 正确答案 <b style="color:#16a34a">'+esc(right)+'</b></div>'+
+      '<div style="font-size:12.5px;color:var(--muted);margin-top:2px">'+esc(q.ex||"")+'</div></div>';
+  }).join("");
+  var hist=mockHist.length>1?('<div style="font-size:12.5px;color:var(--muted);margin-top:6px">历次成绩：'+mockHist.map(function(h){return h.score;}).join(" → ")+'</div>'):"";
+  var ov=mockOvEl();
+  ov.innerHTML='<div class="card" style="max-width:660px;width:100%;margin-top:18px">'+
+    '<div style="text-align:center"><div style="font-size:38px;font-weight:800">'+sc+' <span style="font-size:15px;color:var(--muted)">/ 70 分</span></div>'+
+    '<div style="font-size:13.5px;margin-top:6px">'+(sc>=62?'🎉 超过一等奖目标线 62 分，保持住！':'距一等奖目标线 62 分还差 <b style="color:var(--err)">'+(62-sc)+'</b> 分——错题已自动加入错题本，重练它们就是提分最快的路。')+'</div>'+hist+'</div>'+
+    '<div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:12px;font-size:13px">'+
+      '<span>单选 '+by.single[1]+'/'+by.single[0]+'（'+pct(by.single[1],by.single[0])+'%）</span>'+
+      '<span>判断 '+by.judge[1]+'/'+by.judge[0]+'（'+pct(by.judge[1],by.judge[0])+'%）</span>'+
+      '<span>多选 '+by.multi[1]+'/'+by.multi[0]+'（'+pct(by.multi[1],by.multi[0])+'%）</span>'+
+    '</div>'+
+    (wrongs.length?('<div style="margin-top:14px"><b>📝 错题清单（'+wrongs.length+' 道，已加入错题本）</b>'+list+'</div>'):'<div style="text-align:center;margin-top:14px">🎉 全对，太强了！</div>')+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px">'+
+      '<button class="tbtn" onclick="closeMock()">关闭</button>'+
+      '<button class="tbtn" onclick="exitMock();redoWrong()">🔁 重练错题</button>'+
+      '<button class="tbtn" onclick="exitMock();startMock()">再考一次</button>'+
+    '</div></div>';
+  ov.scrollTop=0;
+}
+function closeMock(){exitMock();}
+
+/* ---------- 错题重练 ---------- */
+var redoList=[],redoPos=0,redoAns={};
+function redoWrong(){
+  var ids=Object.keys(wrong);
+  if(!ids.length){toast("错题本为空——先去练习或考一场模拟考");return;}
+  redoList=ids.map(function(id){return qObj(id);}).filter(Boolean);
+  redoPos=0;redoAns={};renderRedo();
+}
+function redoOvEl(){var ov=document.getElementById("redoOv");
+  if(!ov){ov=document.createElement("div");ov.id="redoOv";ov.style.cssText="position:fixed;inset:0;background:rgba(15,30,60,.55);z-index:998;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow:auto";document.body.appendChild(ov);}return ov;}
+function redoPick(el){
+  var q=redoList[redoPos],t=qKind(q),i=+el.dataset.i;
+  if(t==="multi"){
+    var cur=(redoAns[q.id]||[]).slice(),k=cur.indexOf(i);
+    if(k>=0)cur.splice(k,1);else cur.push(i);
+    redoAns[q.id]=cur;el.classList.toggle("sel");
+  }else{
+    redoAns[q.id]=i;
+    el.closest(".opts").querySelectorAll(".opt").forEach(function(o){o.classList.remove("sel");});
+    el.classList.add("sel");
+  }
+}
+function renderRedo(){
+  var ov=redoOvEl(),q=redoList[redoPos],t=qKind(q),ans=redoAns[q.id];
+  var opts=q.o.map(function(o,i){
+    var sel=(t==="multi")?(Array.isArray(ans)&&ans.indexOf(i)>=0):(ans===i);
+    return '<div class="opt'+(sel?" sel":"")+'" data-i="'+i+'" onclick="redoPick(this)"><span class="lk">'+optLetter(i)+'</span><span>'+esc(o)+'</span></div>';
+  }).join("");
+  ov.innerHTML='<div class="card" style="max-width:660px;width:100%;margin-top:18px">'+
+    '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>🔁 错题重练 · 第 '+(redoPos+1)+' / '+redoList.length+' 题 · '+(t==="multi"?"多选":(t==="judge"?"判断":"单选"))+'</b><span style="font-size:12.5px;color:var(--muted)">答对即可移出错题本</span></div>'+
+    '<div class="qt" style="margin-top:12px;font-weight:700;font-size:15px;line-height:1.8">'+esc(q.q)+'</div>'+
+    '<div class="opts" style="margin-top:10px" id="redoOpts">'+opts+'</div>'+
+    '<div id="redoRes" style="margin-top:8px"></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'+
+      '<button class="tbtn" id="redoCheck">判分</button>'+
+      '<button class="tbtn" id="redoNext" style="display:none">下一题 →</button>'+
+      '<button class="tbtn" onclick="closeRedo()">退出</button>'+
+    '</div></div>';
+  document.getElementById("redoCheck").onclick=function(){
+    var t2=qKind(q),a=redoAns[q.id],ci=correctIdx(q);
+    var ok=(t2==="multi")?(Array.isArray(a)&&a.length===ci.length&&ci.every(function(i){return a.indexOf(i)>=0;})):(a===ci[0]);
+    var box=document.getElementById("redoOpts");
+    box.querySelectorAll(".opt").forEach(function(o,i2){o.onclick=null;if(ci.indexOf(i2)>=0)o.classList.add("correct");else if((t2==="multi")?(Array.isArray(a)&&a.indexOf(i2)>=0):(a===i2))o.classList.add("wrong");});
+    var res=document.getElementById("redoRes");
+    if(ok){
+      delete wrong[q.id];save();refreshWrong();
+      res.innerHTML='<div class="note" style="border:1px solid var(--ok)">✅ 答对了！已自动移出错题本（剩余 '+Object.keys(wrong).length+' 道）</div>';
+    }else{
+      res.innerHTML='<div class="note" style="border:1px solid var(--err)">❌ 答错了 · 正确答案 '+ci.map(optLetter).join("、")+'——保留在错题本，下次再来</div>';
+    }
+    document.getElementById("redoCheck").style.display="none";
+    document.getElementById("redoNext").style.display="";
+  };
+  document.getElementById("redoNext").onclick=function(){
+    if(redoPos>=redoList.length-1){
+      var n=Object.keys(wrong).length;
+      redoOvEl().innerHTML='<div class="card" style="max-width:520px;width:100%;margin-top:60px;text-align:center"><div style="font-size:34px">🎯</div><b>本轮重练完成</b><p style="font-size:13.5px;color:var(--muted);margin-top:8px">错题本还剩 '+n+' 道。答对的已自动移出，答错的下次继续。</p><div style="margin-top:12px"><button class="tbtn" onclick="closeRedo()">好的</button></div></div>';
+    }else{redoPos++;renderRedo();}
+  };
+}
+function closeRedo(){var ov=document.getElementById("redoOv");if(ov&&ov.parentNode)ov.parentNode.removeChild(ov);}
+
+/* ---------- 换设备同步码 ---------- */
+function syncEncode(d){return "EC1."+btoa(unescape(encodeURIComponent(JSON.stringify(d))))}
+function syncDecode(s){
+  s=String(s||"").trim().replace(/\s+/g,"");
+  if(s.indexOf("EC1.")===0)s=s.slice(4);
+  var d=JSON.parse(decodeURIComponent(escape(atob(s))));
+  if(!d||d.app!=="excel-route")throw new Error("bad");
+  return d;
+}
+function syncModal(mode){
+  var old=document.getElementById("syncOv");if(old&&old.parentNode)old.parentNode.removeChild(old);
+  var ov=document.createElement("div");ov.id="syncOv";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(15,30,60,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px";
+  var html="";
+  if(mode==="menu"){
+    html='<b>🔄 换设备同步</b><p class="note" style="margin-top:8px">进度只保存在本机浏览器。旧设备生成同步码 → 微信发给「文件传输助手」→ 新设备粘贴导入，学习进度与错题本无缝搬家。</p>'+
+      '<div class="toolbar" style="margin-top:12px"><button class="tbtn" id="syncOut">📤 旧设备 · 生成同步码</button><button class="tbtn" id="syncIn">📥 新设备 · 粘贴导入</button><button class="tbtn" id="syncClose">关闭</button></div>';
+  }else if(mode==="out"){
+    var code="";try{code=syncEncode({app:"excel-route",v:2,at:new Date().toISOString(),done:state,wrong:wrong})}catch(e){}
+    html='<b>📤 同步码已生成</b><p class="note" style="margin-top:8px">复制下面整段（EC1. 开头）→ 微信发给「文件传输助手」→ 在新设备打开本页 → 「换设备同步」→「粘贴导入」。</p>'+
+      '<textarea id="syncTa" readonly style="width:100%;height:110px;margin-top:8px;padding:10px;border:1.5px solid var(--border);border-radius:12px;font-size:11.5px;font-family:monospace;word-break:break-all">'+code+'</textarea>'+
+      '<div class="toolbar" style="margin-top:10px"><button class="tbtn" id="syncCopy">📋 复制同步码</button><button class="tbtn" id="syncBack">← 返回</button></div>';
+  }else{
+    html='<b>📥 粘贴同步码</b><p class="note" style="margin-top:8px">粘贴旧设备的同步码（EC1. 开头）。导入会<b style="color:var(--err)">覆盖</b>本机的学习进度与错题本。</p>'+
+      '<textarea id="syncTa" placeholder="EC1.xxxxxx…" style="width:100%;height:110px;margin-top:8px;padding:10px;border:1.5px solid var(--border);border-radius:12px;font-size:11.5px;font-family:monospace;word-break:break-all"></textarea>'+
+      '<div class="toolbar" style="margin-top:10px"><button class="tbtn" id="syncGo">📥 导入并覆盖</button><button class="tbtn" id="syncBack">← 返回</button></div>';
+  }
+  ov.innerHTML='<div class="card" style="max-width:540px;width:100%;max-height:82vh;overflow:auto">'+html+'</div>';
+  document.body.appendChild(ov);
+  function close(){if(ov.parentNode)ov.parentNode.removeChild(ov)}
+  ov.addEventListener("click",function(e){if(e.target===ov)close()});
+  var cl=document.getElementById("syncClose");if(cl)cl.onclick=close;
+  var bk=document.getElementById("syncBack");if(bk)bk.onclick=function(){syncModal("menu")};
+  var so=document.getElementById("syncOut");if(so)so.onclick=function(){syncModal("out")};
+  var si=document.getElementById("syncIn");if(si)si.onclick=function(){syncModal("in")};
+  var cp=document.getElementById("syncCopy");
+  if(cp)cp.onclick=function(){
+    var t=document.getElementById("syncTa").value;
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast("✅ 同步码已复制，去微信发给「文件传输助手」")},function(){toast("复制失败，请长按全选手动复制")});
+    else toast("复制失败，请长按全选手动复制");
+  };
+  var go=document.getElementById("syncGo");
+  if(go)go.onclick=function(){
+    var d;try{d=syncDecode(document.getElementById("syncTa").value)}catch(e){toast("❌ 同步码无效，请完整粘贴 EC1. 开头的内容");return;}
+    if(!confirm("导入将覆盖本机进度与错题本，确定继续？"))return;
+    if(d.done)localStorage.setItem(KEY,JSON.stringify(d.done));
+    if(d.wrong)localStorage.setItem(WKEY,JSON.stringify(d.wrong));
+    toast("✅ 同步完成，正在刷新…");setTimeout(function(){location.reload()},600);
+  };
+}
+
+/* ---------- 绑定 ---------- */
+document.getElementById("btnMock2").onclick=startMock;
+document.getElementById("btnRedo").onclick=redoWrong;
+document.getElementById("btnSync2").onclick=function(){syncModal("menu")};
 </script>
 </body>
 </html>
