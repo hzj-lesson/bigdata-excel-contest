@@ -481,7 +481,19 @@ function showPanel(pid){
   if(pid==="p1"&&typeof renderDash==="function")renderDash();
 }
 function goQuiz(mod){
-  qzMod=mod;qzOnlyWrong=false;qzOnlyBook=false;qzOnlyReal=false;qzOnlyJudge=false;qzOnlyMulti=false;qzPos=0;
+  qzMod=mod;qzOnlyWrong=false;qzOnlyBook=false;qzOnlyReal=false;qzOnlyJudge=false;qzOnlyMulti=false;qzCustomMode=false;qzPos=0;
+  showPanel("p7");renderQzChips();renderQz();
+  if(typeof qzApply==="function")qzApply();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function buildJudgeMulti(dose){
+  var j=ALLQ.filter(function(q){return q.m===13&&q.ty==="judge";}).slice(0,dose);
+  var m=ALLQ.filter(function(q){return q.m===14&&q.ty==="multi";}).slice(0,dose);
+  return j.concat(m);
+}
+function goQuizJudgeMulti(list){
+  qzCustom=list;qzCustomMode=true;qzMod=0;
+  qzOnlyWrong=qzOnlyBook=qzOnlyReal=qzOnlyJudge=qzOnlyMulti=false;qzPos=0;
   showPanel("p7");renderQzChips();renderQz();
   if(typeof qzApply==="function")qzApply();
   window.scrollTo({top:0,behavior:"smooth"});
@@ -524,10 +536,22 @@ function dayMods(tag,task){
 }
 function dayGo(tag,task){
   var s=tag+" "+task;
+  /* 定位阶段与阶段内序号（用于阶段一前期渐进加练判断/多选） */
+  var si=-1,di=-1;
+  for(var i=0;i<STAGES.length;i++){var dd=STAGES[i].days;for(var j=0;j<dd.length;j++){if(dd[j][3]===tag&&dd[j][4]===task){si=i;di=j;}}}
   /* 科目日优先联动知识点，避免任务里的「综合/回炉/错题」等词抢走路由 */
   if(/科目一|科目二/.test(tag)){
     var m0=dayMods(tag,task);
-    if(m0.mods.length||m0.kbs.length){goKnowledge(m0.mods,m0.kbs);return}
+    if(m0.mods.length||m0.kbs.length){
+      goKnowledge(m0.mods,m0.kbs);
+      /* 阶段一（9/5–9/17）基础日：渐进加练判断/多选，首练从 9/18 提前到 9/6 */
+      if(si===0&&di>=0){
+        var dose=Math.min(10,5+Math.floor(di/2));
+        var jl=buildJudgeMulti(dose);
+        if(jl.length){setTimeout(function(){goQuizJudgeMulti(jl);},160);toast("📌 已联动知识点，今日额外加练 判断/多选各约 "+dose+" 题");}
+      }
+      return;
+    }
   }
   if(/整体|官网|大纲|摸底/.test(s)){showPanel("p6");window.scrollTo({top:0,behavior:"smooth"});toast("📌 先下大纲、做摸底题");return}
   if(/模拟|错题|综合|小测|回炉|收心/.test(s)){goQuiz(0);toast("🎯 综合刷题模式：建议按模块过一遍错题");return}
@@ -757,9 +781,10 @@ var MULTIN=ALLQ.filter(function(q){return q.ty==="multi"}).length;
 var MKEY="excel_contest_mock_v1";
 var mockHist=[];try{mockHist=JSON.parse(localStorage.getItem(MKEY))||[]}catch(e){mockHist=[]}
 function mockHistSave(){try{localStorage.setItem(MKEY,JSON.stringify(mockHist))}catch(e){}}
-var qzMod=0,qzOnlyWrong=false,qzOnlyBook=false,qzOnlyReal=false,qzPos=0,qzOnlyJudge=false,qzOnlyMulti=false,qzMock=false,mock=null;
+var qzMod=0,qzOnlyWrong=false,qzOnlyBook=false,qzOnlyReal=false,qzPos=0,qzOnlyJudge=false,qzOnlyMulti=false,qzMock=false,mock=null,qzCustom=[],qzCustomMode=false;
 
 function qzList(){
+  if(qzCustomMode)return qzCustom;
   var arr=ALLQ.filter(function(q){return !qzMod||q.m===qzMod});
   if(qzOnlyWrong)arr=arr.filter(function(q){return qz.wrong[q.gid]}).sort(function(a,b){return (qz.wrong[b.gid]||0)-(qz.wrong[a.gid]||0)});
   if(qzOnlyBook)arr=arr.filter(function(q){return q.b>0});
@@ -951,7 +976,7 @@ function startMock(){
     .concat(shuf(by.multi).slice(0,Math.min(10,by.multi.length)));
   if(lst.length<10)lst=shuf(ALLQ).slice(0,Math.min(60,ALLQ.length));
   mock={list:lst,pos:0,ans:{},multiSel:{},wrong:{},deadline:Date.now()+100*60*1000,finished:false,score:0,timer:null};
-  qzMock=true;qzOnlyWrong=false;qzOnlyBook=false;qzOnlyReal=false;qzOnlyJudge=false;qzOnlyMulti=false;qzMod=0;
+  qzMock=true;qzOnlyWrong=false;qzOnlyBook=false;qzOnlyReal=false;qzOnlyJudge=false;qzOnlyMulti=false;qzMod=0;qzCustomMode=false;
   document.getElementById("qzTools").style.display="none";
   document.getElementById("qzChips").style.display="none";
   document.getElementById("qzPrev").style.display="none";
@@ -1220,7 +1245,7 @@ function qzModeBtn(allId,wrongId,bookId,realId,judgeId,multiId){
 function qzApply(){qzModeBtn("qzModeAll","qzModeWrong","qzModeBook","qzModeReal","qzModeJudge","qzModeMulti")}
 function qzOnly(name){
   qzOnlyWrong=(name==="wrong");qzOnlyBook=(name==="book");qzOnlyReal=(name==="real");
-  qzOnlyJudge=(name==="judge");qzOnlyMulti=(name==="multi");
+  qzOnlyJudge=(name==="judge");qzOnlyMulti=(name==="multi");qzCustomMode=false;
   qzApply();
 }
 document.getElementById("qzModeAll").addEventListener("click",function(){qzOnly("all")});
