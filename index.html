@@ -221,13 +221,13 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
       </table></div>
     </div>
 
-    <h2 class="sec">四阶段备赛路线</h2>
+    <h2 class="sec">五阶段备赛路线</h2>
     <div class="card scrolly">
       <table class="tbl">
         <tr><th>阶段</th><th>日期</th><th>天数</th><th>核心目标</th></tr>
         <tr><td>一：基础夯实</td><td>9 月 5 日—9 月 18 日</td><td>14 天</td><td>函数公式过关＋数据分析基础理论通读</td></tr>
         <tr><td>二：核心突破</td><td>9 月 19 日—9 月 30 日</td><td>12 天</td><td>数据透视表＋图表＋Power Query</td></tr>
-        <tr><td>国庆假期</td><td>10 月 1 日—10 月 7 日</td><td>—</td><td>休息，不安排任务</td></tr>
+        <tr><td>国庆特训</td><td>10 月 1 日—10 月 7 日</td><td>7 天</td><td>每日轻量复盘＋混合刷题，保持手感不脱节</td></tr>
         <tr><td>三：刷题强化</td><td>10 月 8 日—10 月 14 日</td><td>7 天</td><td>法规伦理速记＋模拟题＋实操案例</td></tr>
         <tr><td>四：考前冲刺</td><td>10 月 15 日—10 月 16 日</td><td>2 天</td><td>全真模拟＋考试环境检查</td></tr>
       </table>
@@ -366,6 +366,14 @@ var STAGES=[
 ["2026-09-28","9月28日","一","科目二(六)","图表：图表美化、数据透视图"],
 ["2026-09-29","9月29日","二","科目二(二)","Power Query：从 CSV/文本导入数据、基础清洗转换（数据获取）"],
 ["2026-09-30","9月30日","三","科目二(二)","Power Query：合并查询、追加查询、透视/逆透视"]]},
+{name:"阶段二·五 · 国庆特训",range:"10 月 1 日 — 10 月 7 日 · 每日轻量复盘＋混合刷题（保持手感不脱节）",days:[
+["2026-10-01","10月1日","四","综合","国庆 Day1 轻量：混合客观题 10 题（单选 6＋判断 2＋多选 2）保持手感，不贪多"],
+["2026-10-02","10月2日","五","科目二(三)","国庆 Day2：函数公式回顾——IF / VLOOKUP / SUMIFS 各练 3 题，并复习基础日错题"],
+["2026-10-03","10月3日","六","科目二(三)","国庆 Day3：透视表核心回顾——四大区域布局＋值汇总方式切换，练 8 题"],
+["2026-10-04","10月4日","日","科目二(六)","国庆 Day4：图表选型回顾——柱/条/折/饼/组合图选择逻辑，练 6 题"],
+["2026-10-05","10月5日","一","复习","国庆 Day5：错题本重做——把前 30 天函数＋透视表错题重做一遍（约 10 题）"],
+["2026-10-06","10月6日","二","综合","国庆 Day6：判断/多选专项各 8 题，专攻易错点"],
+["2026-10-07","10月7日","三","综合","国庆 Day7：综合小测 15 题（单选 10＋判断 3＋多选 2），收心准备阶段三"]]},
 {name:"阶段三 · 刷题强化",range:"10 月 8 日 — 10 月 14 日 · 法规伦理＋模拟题＋实操案例",days:[
 ["2026-10-08","10月8日","四","复习","收心日：重做错题本中函数＋透视表部分，找回手感"],
 ["2026-10-09","10月9日","五","科目一(二)","数据法律法规速记：《数据安全法》《网络安全法》《个人信息保护法》核心制度"],
@@ -615,10 +623,7 @@ STAGES.forEach(function(st,si){
   if(si===0)days.classList.add("open");
   card.appendChild(head);card.appendChild(days);planBox.appendChild(card);
 });
-/* 国庆休息卡 */
-var rest=document.createElement("div");rest.className="card";
-rest.innerHTML='<div class="rest-day">🏖️ <b>国庆假期（10 月 1 日—7 日）</b>：完全休息，不安排任务。愿意的话随手翻翻错题本即可。</div>';
-planBox.appendChild(rest);
+/* 国庆已并入「阶段二·五 · 国庆特训」，逐日计划自动渲染，无需独立休息卡 */
 
 /* ================= 知识点渲染 ================= */
 /* KB_SCHED：知识点/必背速记在逐日计划中的首学位置（gen_kb_sched.js 实跑 dayMods 生成），按此排序展示 */
@@ -769,7 +774,7 @@ renderKBAll();
 var QKEY="excel_contest_quiz_v1";
 var qz={};try{qz=JSON.parse(localStorage.getItem(QKEY))||{}}catch(e){qz={}}
 if(!qz.wrong)qz.wrong={};if(!qz.done)qz.done={};if(!qz.multiSel)qz.multiSel={};
-if(!qz.today||qz.today.d!==todayStr)qz.today={d:todayStr,n:0};
+if(!qz.today||qz.today.d!==todayStr)qz.today={d:todayStr,n:0,single:0,judge:0,multi:0};
 function qzSave(){try{localStorage.setItem(QKEY,JSON.stringify(qz))}catch(e){}}
 
 var ALLQ=[];
@@ -850,8 +855,10 @@ function qzType(q){return q.ty||"single"}
 function qzSorted(a){return String(a).split("").sort().join("")}
 function saveAns(q,ok){
   if(qzMock&&mock){if(ok)delete mock.wrong[q.gid];else mock.wrong[q.gid]=1;return;}
-  if(qz.today.d!==todayStr)qz.today={d:todayStr,n:0};
+  if(qz.today.d!==todayStr)qz.today={d:todayStr,n:0,single:0,judge:0,multi:0};
   qz.today.n++;
+  var _ty=qzType(q);
+  if(_ty==="single")qz.today.single++;else if(_ty==="judge")qz.today.judge++;else if(_ty==="multi")qz.today.multi++;
   /* 智能错题本：wrong[gid]=累计错误次数；答对一次递减 1，减到 0 自动出池（错得多排前面、要多答对一次才出池） */
   if(ok){if(qz.wrong[q.gid]!==undefined){qz.wrong[q.gid]--;if(qz.wrong[q.gid]<=0)delete qz.wrong[q.gid];}}
   else qz.wrong[q.gid]=(qz.wrong[q.gid]||0)+1;
@@ -1140,9 +1147,13 @@ function renderTodayCard(){
     var d=STAGES[hit.s].days[hit.d];
     var wrongN=0;for(var g in qz.wrong)if(qz.wrong[g])wrongN++;
     var goal=(hit.s<2?20:25);
+    var sGoal=hit.s<2?12:14,jGoal=hit.s<2?5:6,mGoal=hit.s<2?3:5;
     function mkGoal(l,done){return '<div style="display:flex;gap:6px;align-items:center"><span style="font-size:15px">'+(done?'✅':'⬜')+'</span><span style="'+(done?'color:var(--muted)':'font-weight:600')+'">'+l+'</span></div>';}
     var goals=mkGoal('打卡今日计划',!!state["s"+hit.s+"d"+hit.d])
       +mkGoal('今日刷题 '+qz.today.n+' / '+goal+' 题',qz.today.n>=goal)
+      +mkGoal('├ 单选 '+qz.today.single+' / '+sGoal+' 题',qz.today.single>=sGoal)
+      +mkGoal('├ 判断 '+qz.today.judge+' / '+jGoal+' 题',qz.today.judge>=jGoal)
+      +mkGoal('└ 多选 '+qz.today.multi+' / '+mGoal+' 题',qz.today.multi>=mGoal)
       +mkGoal('错题本清零（当前 '+wrongN+' 道）',wrongN===0);
     html='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:15.5px">📌 今日任务 · 第 '+dayNo+' / '+total+' 天</b><span class="kb-chip chip-know">'+d[3]+'</span></div>'+
       '<div style="margin-top:8px;font-size:13.8px;line-height:1.8">'+d[4]+'</div>'+
@@ -1153,7 +1164,7 @@ function renderTodayCard(){
   }else{
     var st0=STAGES[0].days[0][0];
     var eD=STAGES[STAGES.length-1].days,last=eD[eD.length-1][0];
-    var msg=todayStr<st0?("计划将于 "+st0+" 开始——预热期建议先背「知识点」页的必背速记。"):(todayStr>last?("35 天计划已收官，进入自由复习：反复刷错题本＋每天一次「全真模拟考」。"):"今天是休息日（国庆假期），不安排任务——愿意的话随手翻翻错题本即可。");
+    var msg=todayStr<st0?("计划将于 "+st0+" 开始——预热期建议先背「知识点」页的必背速记。"):(todayStr>last?(total+" 天计划已收官，进入自由复习：反复刷错题本＋每天一次「全真模拟考」。"):"今天计划暂未排任务——可自由复习或刷错题本。");
     html='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:15.5px">📌 今日</b></div>'+
       '<div style="margin-top:8px;font-size:13.8px;line-height:1.8">'+msg+'</div>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="tab" id="tdWrong" style="background:var(--soft);color:var(--primary)">🔁 去刷错题</button></div>';
