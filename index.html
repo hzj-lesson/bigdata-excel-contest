@@ -180,6 +180,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
 
     <div class="card" id="todayCard"></div>
 
+    <div class="card" id="dash"></div>
+
     <h2 class="sec">模块掌握度</h2>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
@@ -471,9 +473,12 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
 function toast(msg){var t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove("show")},1400)}
 
 /* ================= 计划 ⇄ 知识点 ⇄ 刷题 联动 ================= */
+var curPanel="p1";
 function showPanel(pid){
+  curPanel=pid;
   document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("on",t.dataset.p===pid)});
   document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("on",p.id===pid)});
+  if(pid==="p1"&&typeof renderDash==="function")renderDash();
 }
 function goQuiz(mod){
   qzMod=mod;qzOnlyWrong=false;qzOnlyBook=false;qzOnlyReal=false;qzOnlyJudge=false;qzOnlyMulti=false;qzPos=0;
@@ -775,6 +780,35 @@ function qzStats(){
   document.getElementById("qzModeMulti").textContent="☑️ 多选题（"+MULTIN+"）";
   if(typeof renderModStat==="function")renderModStat();
 }
+function renderDash(){
+  var box=document.getElementById("dash");if(!box)return;
+  var doneN=0,rtN=0,by={single:[0,0],judge:[0,0],multi:[0,0]};
+  ALLQ.forEach(function(q){
+    var p=qz.done[q.gid];
+    if(p!==undefined){
+      doneN++;
+      var ok=(qzType(q)==="multi")?qzSorted(p)===qzSorted(q.a):p===q.a;
+      if(ok)rtN++;
+      var t=qzType(q);by[t][0]++;if(ok)by[t][1]++;
+    }
+  });
+  var wrongN=0;for(var g in qz.wrong)if(qz.wrong[g])wrongN++;
+  var total=ALLQ.length;
+  var pct=doneN?Math.round(rtN/doneN*100):0;
+  var score70=doneN?Math.round(rtN/doneN*70):0;
+  var gap=score70<62?(62-score70):0;
+  function row(t,n,rc){var p=n?Math.round(rc/n*100):0;var c=p>=80?"#16a34a":(p>=60?"#d97706":"#dc2626");return '<div style="margin-top:7px"><div style="display:flex;justify-content:space-between;font-size:12.5px"><span>'+t+'</span><span style="color:var(--muted)">'+(n?('正确率 '+p+'% · '+rc+'/'+n):'未开始')+'</span></div><div class="progbar" style="margin-top:3px"><i style="width:'+p+'%;background:'+c+'"></i></div></div>';}
+  box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><b style="font-size:15.5px">📊 刷题数据看板</b><span class="prog-txt">已刷 '+doneN+' / '+total+' 题</span></div>'+
+    '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:13px">'+
+      '<span>总正确率 <b style="color:'+(pct>=80?"#16a34a":(pct>=60?"#d97706":"#dc2626"))+'">'+pct+'%</b></span>'+
+      '<span>当前折算水平 <b>'+score70+' / 70 分</b></span>'+
+      '<span>错题池 <b style="color:'+(wrongN?"#dc2626":"#16a34a")+'">'+wrongN+' 道</b></span>'+
+      (doneN?('<span>'+(score70>=62?'🎉 已超一等奖线':'距一等奖线 62 分还差 <b style="color:#dc2626">'+gap+' 分</b>')+'</span>'):'')+
+    '</div>'+
+    row("单选题",by.single[0],by.single[1])+
+    row("判断题",by.judge[0],by.judge[1])+
+    row("多选题",by.multi[0],by.multi[1]);
+}
 function renderQzChips(){
   var box=document.getElementById("qzChips");box.innerHTML="";
   var mk=function(label,val){
@@ -797,6 +831,7 @@ function saveAns(q,ok){
   if(ok){if(qz.wrong[q.gid]!==undefined){qz.wrong[q.gid]--;if(qz.wrong[q.gid]<=0)delete qz.wrong[q.gid];}}
   else qz.wrong[q.gid]=(qz.wrong[q.gid]||0)+1;
   qzSave();
+  if(typeof renderDash==="function")renderDash();
 }
 function renderQz(){
   var card=document.getElementById("qzCard");
@@ -854,34 +889,58 @@ function renderQz(){
     '<div style="font-size:15px;font-weight:700;line-height:1.8">'+q.q+'</div>'+
     '<div style="margin-top:12px">'+optsHtml+'</div>'+submitHtml+exHtml;
   card.querySelectorAll(".qz-opt").forEach(function(el){
-    el.addEventListener("click",function(){
-      var i=+el.dataset.i,L="ABCDE"[i];
-      if(qt==="multi"){
-        if(store[q.gid]!==undefined)return;
-        var cur=(selflag[q.gid]||"").split(""),k=cur.indexOf(L);
-        if(k>=0)cur.splice(k,1);else cur.push(L);
-        selflag[q.gid]=cur.sort().join("");
-        renderQz();
-      }else{
-        if(store[q.gid]!==undefined)return;
-        store[q.gid]=L;
-        saveAns(q,L===q.a);
-        renderQz();
-        if(L===q.a)toast("✅ 答对了！");else toast("❌ 错了，已加入错题本");
-      }
-    });
+    el.addEventListener("click",function(){qzChoose(+el.dataset.i)});
   });
   var sb=document.getElementById("qzSubmit");
-  if(sb)sb.addEventListener("click",function(){
+  if(sb)sb.addEventListener("click",function(){qzNext()});
+}
+
+/* 键盘速刷：单选/判断 A-E 选 + Enter 下一题；多选 A-E 勾选 + Enter 提交/下一题（仅练习模式） */
+function qzChoose(i){
+  if(qzMock&&mock)return;
+  var list=qzList(),q=list[qzPos],qt=qzType(q);
+  var store=qz.done,selflag=qz.multiSel;
+  if(store[q.gid]!==undefined)return;
+  var L="ABCDE"[i];
+  if(qt==="multi"){
+    var cur=(selflag[q.gid]||"").split(""),k=cur.indexOf(L);
+    if(k>=0)cur.splice(k,1);else cur.push(L);
+    selflag[q.gid]=cur.sort().join("");
+    renderQz();
+  }else{
+    store[q.gid]=L;saveAns(q,L===q.a);renderQz();
+    if(L===q.a)toast("✅ 答对了！");else toast("❌ 错了，已加入错题本");
+  }
+}
+function qzNext(){
+  if(qzMock&&mock)return;
+  var list=qzList(),q=list[qzPos],qt=qzType(q);
+  var store=qz.done,selflag=qz.multiSel;
+  if(qt==="multi"&&store[q.gid]===undefined){
     var s=selflag[q.gid]||"";
     if(!s){toast("请先选择至少一个选项");return;}
-    var ok=qzSorted(s)===ansSet;
-    store[q.gid]=qzSorted(s);
-    saveAns(q,ok);
-    renderQz();
+    var ok=qzSorted(s)===qzSorted(q.a);
+    store[q.gid]=qzSorted(s);saveAns(q,ok);renderQz();
     toast(ok?"✅ 答对了！":"❌ 错了，已加入错题本");
-  });
+    return;
+  }
+  if(store[q.gid]===undefined)return;
+  if(qzPos<list.length-1){qzPos++;renderQz();}
 }
+document.addEventListener("keydown",function(e){
+  if(e.target&&(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA"))return;
+  if(curPanel!=="p7")return;
+  if(qzMock&&mock)return;
+  var list=qzList();if(!list.length)return;
+  var k=e.key.toUpperCase();
+  if(/^[A-E]$/.test(k)){
+    var q=list[qzPos],n=q.o.length,idx="ABCDE".indexOf(k);
+    if(idx<n&&idx>=0){e.preventDefault();qzChoose(idx);}
+  }else if(e.key==="Enter"){
+    e.preventDefault();qzNext();
+  }
+});
+
 /* ============ 全真模拟考 ============ */
 function startMock(){
   function shuf(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
@@ -978,14 +1037,45 @@ function renderMockResult(){
   html+='<div style="margin-top:16px"><b style="font-size:14px">❌ 错题 '+wrongList.length+' 道</b>';
   if(!wrongList.length)html+='<p style="font-size:13px;color:var(--muted);margin-top:6px">全部答对，继续保持！</p>';
   else wrongList.slice(0,40).forEach(function(q){
-    html+='<div style="margin-top:8px;font-size:13px;line-height:1.7;border-left:3px solid #ef4444;padding-left:9px">'+q.q+'<br><span style="color:var(--muted)">正确答案：<b>'+q.a+'</b></span></div>';
+    html+='<div style="margin-top:8px;font-size:13px;line-height:1.7;border-left:3px solid #ef4444;padding-left:9px">'+q.q+'<br><span style="color:var(--muted)">正确答案：<b>'+q.a+'</b></span> <button class="tab rev-btn" data-gid="'+q.gid+'" style="background:var(--soft);color:var(--primary);padding:2px 8px;font-size:11.5px;margin-left:4px">📖 重做</button></div>';
   });
+  if(wrongList.length)html+='<div style="text-align:center;margin-top:12px"><button class="tab" id="mockToWrong" style="background:#dc2626;color:#fff">📥 错题一键入重练池</button></div>';
   html+='</div><div style="display:flex;gap:8px;justify-content:center;margin-top:18px;flex-wrap:wrap">'+
     '<button class="tab" id="mockRetry" style="background:var(--primary);color:#fff">🔄 再考一次</button>'+
     '<button class="tab" id="mockBack" style="background:var(--soft);color:var(--primary)">← 返回练习</button></div>';
   card.className="card";card.innerHTML=html;
   document.getElementById("mockRetry").addEventListener("click",function(){startMock()});
   document.getElementById("mockBack").addEventListener("click",function(){mock=null;renderQz()});
+  var mt=document.getElementById("mockToWrong");
+  if(mt)mt.addEventListener("click",function(){
+    var n=0;for(var g in mock.wrong){if(mock.wrong[g]){qz.wrong[g]=(qz.wrong[g]||0)+1;n++;}}
+    qzOnlyWrong=true;qzSave();mock=null;
+    showPanel("p7");renderQzChips();renderQz();
+    toast("📥 已把 "+n+" 道错题加入重练池");
+  });
+  card.querySelectorAll(".rev-btn").forEach(function(b){b.addEventListener("click",function(){mockReview(b.dataset.gid)})});
+}
+function mockReview(gid){
+  var q=ALLQ.find(function(x){return x.gid===gid});
+  if(!q)return;
+  var card=document.getElementById("qzCard");
+  var qt=qzType(q),myAns=mock.ans[gid];
+  var myTxt=(myAns===undefined)?"未作答":((qt==="multi")?qzSorted(myAns):myAns);
+  var optsHtml=q.o.map(function(t,i){
+    var L2="ABCDE"[i];
+    var isAns=qzSorted(q.a).indexOf(L2)>=0;
+    var isMine=(myAns!==undefined)&&(qzSorted(myAns).indexOf(L2)>=0);
+    var cls="qz-opt"+(isAns?" correct":(isMine?" wrong":""));
+    return '<div class="'+cls+'"><b>'+L2+'.</b> '+t+'</div>';
+  }).join("");
+  var ok=(qt==="multi")?(myAns!==undefined&&qzSorted(myAns)===qzSorted(q.a)):(myAns===q.a);
+  card.className="card";
+  card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">📖 逐题回看</b><span class="kb-chip '+(ok?"chip-master":"chip-familiar")+'">'+(ok?"当时答对":"当时答错")+'</span></div>'+
+    '<div style="font-size:15px;font-weight:700;line-height:1.8;margin-top:8px">'+q.q+'</div>'+
+    '<div style="margin-top:12px">'+optsHtml+'</div>'+
+    '<div class="qz-ex"><b>你的答案：'+(myAns===undefined?'未作答':myTxt)+' · 正确答案：'+(qt==="multi"?qzSorted(q.a):q.a)+'</b><br>'+q.ex+'</div>'+
+    '<div style="margin-top:14px"><button class="tab" id="revBack" style="background:var(--soft);color:var(--primary)">← 返回结算页</button></div>';
+  document.getElementById("revBack").addEventListener("click",renderMockResult);
 }
 /* ============ 总览：模块掌握度 / 今日任务 / 进度备份 ============ */
 function renderModStat(){
