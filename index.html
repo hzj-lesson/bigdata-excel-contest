@@ -202,11 +202,13 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <b style="font-size:15.5px">🎯 各模块正确率（点模块直接去刷）</b>
         <span style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="tab" id="btnSync" style="background:var(--primary);color:#fff">🔄 换设备同步</button>
           <button class="tab" id="btnExport" style="background:var(--soft);color:var(--primary)">⬇️ 导出进度</button>
           <button class="tab" id="btnImport" style="background:var(--soft);color:var(--primary)">⬆️ 导入进度</button>
           <input type="file" id="fileImport" accept="application/json,.json" style="display:none">
         </span>
       </div>
+      <div class="prog-txt" style="margin-top:8px">💾 进度只存在本机浏览器——换手机 / 换电脑请先在旧设备点「🔄 换设备同步」生成同步码（微信发给「文件传输助手」），新设备粘贴导入即可无缝接上；也可用导出 / 导入 JSON 文件。</div>
       <div id="modStat" style="margin-top:10px"></div>
     </div>
 
@@ -1311,6 +1313,72 @@ function importProgress(file){
 document.getElementById("btnExport").addEventListener("click",exportProgress);
 document.getElementById("btnImport").addEventListener("click",function(){document.getElementById("fileImport").click()});
 document.getElementById("fileImport").addEventListener("change",function(e){if(e.target.files&&e.target.files[0])importProgress(e.target.files[0])});
+
+/* ================= 换设备同步码（旧设备生成 → 微信发给自己 → 新设备粘贴导入） ================= */
+function syncEncode(d){return "EC1."+btoa(unescape(encodeURIComponent(JSON.stringify(d))))}
+function syncDecode(s){
+  s=String(s||"").trim().replace(/\s+/g,"");
+  if(s.indexOf("EC1.")===0)s=s.slice(4);
+  var d=JSON.parse(decodeURIComponent(escape(atob(s))));
+  if(!d||d.app!=="excel-contest")throw new Error("bad");
+  return d;
+}
+function syncModal(mode){
+  var old=document.getElementById("syncOv");if(old&&old.parentNode)old.parentNode.removeChild(old);
+  var ov=document.createElement("div");ov.id="syncOv";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px";
+  var html="";
+  if(mode==="menu"){
+    html='<b style="font-size:15.5px">🔄 换设备同步</b>'+
+      '<p style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.7">进度只保存在本机浏览器里，换手机 / 换电脑不会自动带过去。用「同步码」一键搬家：旧设备生成 → 微信发「文件传输助手」→ 新设备粘贴导入。</p>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'+
+      '<button class="tab" id="syncOut" style="background:var(--primary);color:#fff">📤 旧设备 · 生成同步码</button>'+
+      '<button class="tab" id="syncIn" style="background:var(--soft);color:var(--primary)">📥 新设备 · 粘贴导入</button>'+
+      '<button class="tab" id="syncClose" style="background:var(--soft);color:var(--muted)">关闭</button></div>';
+  }else if(mode==="out"){
+    var code="";
+    try{code=syncEncode({app:"excel-contest",ver:1,exported:new Date().toISOString(),quiz:qz,plan:state,mock:mockHist})}catch(e){}
+    html='<b style="font-size:15.5px">📤 同步码已生成</b>'+
+      '<p style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.7">点「复制同步码」→ 微信发给「文件传输助手」→ 在新设备打开本平台 → 「🔄 换设备同步」→「新设备 · 粘贴导入」。</p>'+
+      '<textarea id="syncTa" readonly style="width:100%;box-sizing:border-box;height:110px;margin-top:8px;padding:10px;border:1.5px solid var(--border);border-radius:12px;font-size:11.5px;font-family:monospace;background:var(--card);color:var(--fg);word-break:break-all">'+code+'</textarea>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'+
+      '<button class="tab" id="syncCopy" style="background:var(--primary);color:#fff">📋 复制同步码</button>'+
+      '<button class="tab" id="syncBack" style="background:var(--soft);color:var(--muted)">← 返回</button></div>';
+  }else{
+    html='<b style="font-size:15.5px">📥 粘贴同步码</b>'+
+      '<p style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.7">把旧设备生成的同步码（EC1. 开头）完整粘贴到下面。导入会<b style="color:#dc2626">覆盖</b>本机当前全部进度（刷题记录 / 逐日打卡 / 模考成绩）。</p>'+
+      '<textarea id="syncTa" placeholder="EC1.xxxxxx…" style="width:100%;box-sizing:border-box;height:110px;margin-top:8px;padding:10px;border:1.5px solid var(--border);border-radius:12px;font-size:11.5px;font-family:monospace;background:var(--card);color:var(--fg);word-break:break-all"></textarea>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'+
+      '<button class="tab" id="syncGo" style="background:var(--primary);color:#fff">📥 导入并覆盖</button>'+
+      '<button class="tab" id="syncBack" style="background:var(--soft);color:var(--muted)">← 返回</button></div>';
+  }
+  ov.innerHTML='<div class="card" style="max-width:520px;width:100%;max-height:82vh;overflow:auto">'+html+'</div>';
+  document.body.appendChild(ov);
+  function close(){if(ov.parentNode)ov.parentNode.removeChild(ov)}
+  ov.addEventListener("click",function(e){if(e.target===ov)close()});
+  var cl=document.getElementById("syncClose");if(cl)cl.addEventListener("click",close);
+  var bk=document.getElementById("syncBack");if(bk)bk.addEventListener("click",function(){syncModal("menu")});
+  var so=document.getElementById("syncOut");if(so)so.addEventListener("click",function(){syncModal("out")});
+  var si=document.getElementById("syncIn");if(si)si.addEventListener("click",function(){syncModal("in")});
+  var cp=document.getElementById("syncCopy");
+  if(cp)cp.addEventListener("click",function(){
+    var t=document.getElementById("syncTa").value;
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast("✅ 同步码已复制，去微信发给「文件传输助手」")},function(){fallbackCopy(t,function(){toast("✅ 同步码已复制")})});
+    else fallbackCopy(t,function(){toast("✅ 同步码已复制")});
+  });
+  var go=document.getElementById("syncGo");
+  if(go)go.addEventListener("click",function(){
+    var t=document.getElementById("syncTa").value,d;
+    try{d=syncDecode(t)}catch(e){toast("❌ 同步码无效：请完整粘贴 EC1. 开头的内容");return;}
+    if(!confirm("导入将覆盖本机当前全部进度（刷题记录 / 逐日打卡 / 模考成绩），确定继续？"))return;
+    if(d.quiz)localStorage.setItem(QKEY,JSON.stringify(d.quiz));
+    if(d.plan)localStorage.setItem(KEY,JSON.stringify(d.plan));
+    if(d.mock)localStorage.setItem(MKEY,JSON.stringify(d.mock));
+    toast("✅ 同步完成，正在刷新…");
+    setTimeout(function(){location.reload()},600);
+  });
+}
+document.getElementById("btnSync").addEventListener("click",function(){syncModal("menu")});
 var kbSearchEl=document.getElementById("kbSearch");
 if(kbSearchEl)kbSearchEl.addEventListener("input",function(){
   var q=kbSearchEl.value.trim().toLowerCase();
