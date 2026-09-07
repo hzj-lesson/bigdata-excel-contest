@@ -296,6 +296,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
         <button class="tab" id="qzModeMulti" style="background:var(--soft);color:var(--primary)">☑️ 多选题</button>
         <button class="tab" id="qzModeFav" style="background:var(--soft);color:#b45309">⭐ 我的收藏（0）</button>
         <button class="tab" id="btnMock" style="background:#b91c1c;color:#fff">🎯 全真模拟考</button>
+        <button class="tab" id="btnBrowse" style="background:var(--soft);color:var(--primary)">📜 整卷浏览</button>
         <button class="tab" id="qzReset" style="background:var(--soft);color:var(--muted)">🗑️ 重置记录</button>
       </div>
       <div style="margin-top:10px"><input id="qzSearch" placeholder="🔍 搜题：输入题干 / 选项 / 解析关键词" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;outline:none;background:var(--card);color:var(--fg)"><div class="prog-txt" id="qzSearchN" style="margin-top:4px"></div></div>
@@ -308,7 +309,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
       </div>
     </div>
     <div id="qzCard"></div>
-    <div style="display:flex;gap:8px;justify-content:center;margin-top:4px">
+    <div id="qzNav" style="display:flex;gap:8px;justify-content:center;margin-top:4px">
       <button class="tab" id="qzPrev" style="background:var(--card);color:var(--primary);border:1px solid var(--border)">← 上一题</button>
       <button class="tab" id="qzNext" style="background:var(--primary);color:#fff">下一题 →</button>
     </div>
@@ -805,7 +806,7 @@ var MULTIN=ALLQ.filter(function(q){return q.ty==="multi"}).length;
 var MKEY="excel_contest_mock_v1";
 var mockHist=[];try{mockHist=JSON.parse(localStorage.getItem(MKEY))||[]}catch(e){mockHist=[]}
 function mockHistSave(){try{localStorage.setItem(MKEY,JSON.stringify(mockHist))}catch(e){}}
-var qzMod=0,qzOnlyWrong=false,qzOnlyBook=false,qzOnlyReal=false,qzPos=0,qzOnlyJudge=false,qzOnlyMulti=false,qzOnlyFav=false,qzMock=false,mock=null,qzCustom=[],qzCustomMode=false;
+var qzMod=0,qzOnlyWrong=false,qzOnlyBook=false,qzOnlyReal=false,qzPos=0,qzOnlyJudge=false,qzOnlyMulti=false,qzOnlyFav=false,qzMock=false,mock=null,qzCustom=[],qzCustomMode=false,qzBrowse=false,browseList=[],browseShow=false,browseN=60;
 
 function qzList(){
   if(qzCustomMode)return qzCustom;
@@ -889,6 +890,7 @@ function saveAns(q,ok){
 }
 function renderQz(){
   var card=document.getElementById("qzCard");
+  if(qzBrowse){renderBrowse();return;}
   if(mock&&mock.finished){renderMockResult();return;}
   if(!(qzMock&&mock))qzStats();
   var list=(qzMock&&mock)?mock.list:qzList();
@@ -956,9 +958,73 @@ function renderQz(){
   });
 }
 
+/* ================= 整卷浏览：像看卷子一样通览整份题（点击题目展开答案与解析） ================= */
+function startBrowse(){
+  if(qzMock&&mock){toast("模拟考进行中，交卷或退出后再浏览");return;}
+  var l=qzList();
+  if(!l.length){toast("当前筛选下没有题目");return;}
+  if(l.length>300&&!confirm("当前筛选共 "+l.length+" 题，整卷浏览会分批展开（默认 60 题，可继续加载）。继续？"))return;
+  browseList=l.slice();browseShow=false;browseN=60;qzBrowse=true;
+  renderQz();
+  window.scrollTo({top:0,behavior:"smooth"});
+  toast("📜 整卷浏览：点击任意一题展开答案与解析");
+}
+function exitBrowse(){
+  qzBrowse=false;
+  var nav=document.getElementById("qzNav");if(nav)nav.style.display="flex";
+  renderQz();
+}
+function renderBrowse(){
+  var card=document.getElementById("qzCard");
+  var nav=document.getElementById("qzNav");if(nav)nav.style.display="none";
+  var n=Math.min(browseN,browseList.length);
+  var head='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:15.5px">📜 整卷浏览</b><span class="prog-txt">共 '+browseList.length+' 题 · 当前展开 '+n+' 题</span></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px">'+
+      '<button class="tab" id="brAns" style="background:'+(browseShow?"var(--primary)":"var(--soft)")+';color:'+(browseShow?"#fff":"var(--primary)")+'">'+(browseShow?"🙈 隐藏全部答案":"👁 展开全部答案")+'</button>'+
+      '<button class="tab" id="brBack" style="background:var(--soft);color:var(--muted)">↩ 返回逐题作答</button>'+
+    '</div>'+
+    '<div class="prog-txt" style="margin:8px 0 2px">点击任意一题可展开 / 收起该题的答案与解析（正确选项会变绿）</div>';
+  var body="";
+  for(var i=0;i<n;i++){
+    var q=browseList[i],qt=qzType(q);
+    var ansSet=(qt==="multi")?qzSorted(q.a):q.a;
+    var opts=q.o.map(function(t,k){
+      var L="ABCDE"[k],cls="qz-opt";
+      if(ansSet.indexOf(L)>=0)cls+=(browseShow?" correct":" isans");
+      return '<div class="'+cls+'" style="cursor:default;padding:8px 12px;font-size:13.5px"><b>'+L+'.</b> '+String(t).replace(/</g,"&lt;")+'</div>';
+    }).join("");
+    var mine=qz.done[q.gid];
+    var mineTxt=mine!==undefined?('　<span style="color:'+(((qt==="multi")?qzSorted(mine)===ansSet:mine===q.a)?"#16a34a":"#dc2626")+'">你选 '+mine+'</span>'):"";
+    var typeName=(qt==="multi")?"多选":((qt==="judge")?"判断":"单选");
+    body+='<div class="bq" style="padding:12px 0;border-top:1px solid var(--border);cursor:pointer">'+
+      '<div style="font-size:12.5px;color:var(--muted)">第 '+(i+1)+' 题 · 模块 '+q.m+' · '+typeName+(q.s?(' · '+String(q.s)):'')+'</div>'+
+      '<div style="font-size:14.5px;font-weight:600;line-height:1.75;margin-top:4px">'+String(q.q).replace(/</g,"&lt;")+'</div>'+
+      '<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">'+opts+'</div>'+
+      '<div class="bq-ans" style="display:'+(browseShow?"block":"none")+';margin-top:9px"><div class="qz-ex" style="font-size:13px"><b>✅ 正确答案 '+q.a+'</b>'+mineTxt+'<br>'+String(q.ex||"")+'</div></div>'+
+    '</div>';
+  }
+  var more=(n<browseList.length)?'<div style="text-align:center;margin-top:14px"><button class="tab" id="brMore" style="background:var(--soft);color:var(--primary)">⬇ 继续加载（剩余 '+(browseList.length-n)+' 题）</button></div>':"";
+  card.className="card";card.innerHTML=head+body+more;
+  card.querySelectorAll(".bq").forEach(function(el){
+    el.addEventListener("click",function(){
+      var a=el.querySelector(".bq-ans");if(!a)return;
+      var open=(a.style.display!=="none");
+      if(open){a.style.display="none";el.querySelectorAll(".correct").forEach(function(o){o.classList.remove("correct")});}
+      else{a.style.display="block";el.querySelectorAll(".isans").forEach(function(o){o.classList.add("correct")});}
+    });
+  });
+  var ba=document.getElementById("brAns");
+  if(ba)ba.addEventListener("click",function(){browseShow=!browseShow;renderBrowse()});
+  var bb=document.getElementById("brBack");
+  if(bb)bb.addEventListener("click",function(){exitBrowse()});
+  var bm=document.getElementById("brMore");
+  if(bm)bm.addEventListener("click",function(){browseN+=60;renderBrowse()});
+}
+
 /* 键盘速刷：单选/判断 A-E 选 + Enter 下一题；多选 A-E 勾选 + Enter 提交/下一题（仅练习模式） */
 function qzChoose(i){
   if(qzMock&&mock)return;
+  if(qzBrowse)return;
   var list=qzList(),q=list[qzPos],qt=qzType(q);
   var store=qz.done,selflag=qz.multiSel;
   if(store[q.gid]!==undefined)return;
@@ -975,6 +1041,7 @@ function qzChoose(i){
 }
 function qzNext(){
   if(qzMock&&mock)return;
+  if(qzBrowse)return;
   var list=qzList(),q=list[qzPos],qt=qzType(q);
   var store=qz.done,selflag=qz.multiSel;
   if(qt==="multi"&&store[q.gid]===undefined){
@@ -1282,7 +1349,9 @@ function qzModeBtn(allId,wrongId,bookId,realId,judgeId,multiId){
   M.style.color=qzOnlyMulti?"#fff":"var(--primary)";
   var F=document.getElementById("qzModeFav");
   if(F){F.style.background=qzOnlyFav?"#b45309":"var(--soft)";F.style.color=qzOnlyFav?"#fff":"#b45309";}
-  qzPos=0;renderQz();
+  qzPos=0;
+  if(qzBrowse){browseList=qzList().slice();browseN=60;}
+  renderQz();
 }
 function qzApply(){qzModeBtn("qzModeAll","qzModeWrong","qzModeBook","qzModeReal","qzModeJudge","qzModeMulti")}
 function qzOnly(name){
@@ -1301,7 +1370,8 @@ document.getElementById("qzReset").addEventListener("click",function(){
   if(!confirm("确定清空全部刷题记录和错题本吗？"))return;
   qz={wrong:{},done:{},multiSel:{},fav:qz.fav||{}};qzSave();renderQz();toast("已重置刷题记录（收藏已保留）");
 });
-document.getElementById("btnMock").addEventListener("click",function(){startMock()});
+document.getElementById("btnBrowse").addEventListener("click",function(){startBrowse()});
+document.getElementById("btnMock").addEventListener("click",function(){if(qzBrowse)exitBrowse();startMock()});
 document.getElementById("mockPrev").addEventListener("click",function(){if(!mock)return;mock.pos--;if(mock.pos<0)mock.pos=0;renderQz()});
 document.getElementById("mockNext").addEventListener("click",function(){if(!mock)return;mock.pos++;if(mock.pos>=mock.list.length)mock.pos=mock.list.length-1;renderQz()});
 document.getElementById("mockSubmit").addEventListener("click",function(){if(confirm("确定交卷？未作答的题目将计 0 分。"))submitMock(false)});
@@ -1324,6 +1394,7 @@ renderTodayCard();
       return (String(q.q)+" "+(q.o||[]).join(" ")+" "+String(q.ex||"")+" 模块"+q.m+" "+String(q.mt||"")).toLowerCase().indexOf(kw)>=0;
     });
     qzCustom=hit;qzCustomMode=true;qzPos=0;
+    if(qzBrowse){browseList=hit.slice();browseN=60;}
     if(nEl)nEl.textContent="🔍 命中 "+hit.length+" 题（可直接作答；清空输入框即恢复全部题）";
     renderQz();
   });
