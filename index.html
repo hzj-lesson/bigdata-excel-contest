@@ -127,9 +127,22 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
 .chip-book3{background:#dcfce7;color:#15803d}
 @media (max-width:560px){
   .hero h1{font-size:20px}
+  .hero .sub{font-size:12.5px}
   .cd-num{font-size:26px}
   .day .date{min-width:64px}
   .countdown-card{padding:16px 12px}
+  .tabs{gap:4px;padding:5px}
+  .tab{padding:8px 11px;font-size:13px}
+  .card{padding:14px 13px}
+  .qz-opt{padding:13px;min-height:46px;display:flex;align-items:center;font-size:14.5px}
+  .tbl{font-size:12.5px}
+  .miles{grid-template-columns:1fr}
+  .tag{font-size:11.5px}
+  .stage-title{font-size:14px}
+}
+@media print{
+  .tabs,.hero,footer{display:none!important}
+  .card{break-inside:avoid;box-shadow:none;border:1px solid #ddd}
 }
 </style>
 </head>
@@ -140,7 +153,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
   <div class="sub">全国大学生大数据分析技术技能大赛（第五届）｜依据北京大数据协会《初级考试大纲》编制</div>
   <div class="badges">
     <span class="badge">🎯 省级赛 2026-10-17 开赛</span>
-    <span class="badge">📅 有效备赛 35 天 · 四阶段</span>
+    <span class="badge">📅 有效备赛 42 天 · 五阶段</span>
     <span class="badge">💾 进度自动保存在本机</span>
   </div>
 </div>
@@ -181,6 +194,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
     <div class="card" id="todayCard"></div>
 
     <div class="card" id="dash"></div>
+
+    <div class="card" id="ebb"></div>
 
     <h2 class="sec">模块掌握度</h2>
     <div class="card">
@@ -258,6 +273,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
   <div class="panel" id="p3">
     <div style="margin-top:4px"><input id="kbSearch" placeholder="🔍 搜索知识点（关键词直达）" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;outline:none;background:var(--card);color:var(--fg)"><div class="prog-txt" id="kbSearchN" style="margin-top:4px"></div></div>
     <h2 class="sec">📚 知识点 · 按逐日计划天数排列</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="tab" id="btnCheat" style="background:var(--primary);color:#fff">📄 生成考点小抄（可复制 / 打印）</button></div>
+    <div id="cheatBox"></div>
     <div id="kbAll"></div>
   </div>
 
@@ -277,9 +294,11 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 16px 40p
         <button class="tab" id="qzModeReal" style="background:var(--soft);color:#b91c1c">🎯 只看真题</button>
         <button class="tab" id="qzModeJudge" style="background:var(--soft);color:var(--primary)">✔️ 判断题</button>
         <button class="tab" id="qzModeMulti" style="background:var(--soft);color:var(--primary)">☑️ 多选题</button>
+        <button class="tab" id="qzModeFav" style="background:var(--soft);color:#b45309">⭐ 我的收藏（0）</button>
         <button class="tab" id="btnMock" style="background:#b91c1c;color:#fff">🎯 全真模拟考</button>
         <button class="tab" id="qzReset" style="background:var(--soft);color:var(--muted)">🗑️ 重置记录</button>
       </div>
+      <div style="margin-top:10px"><input id="qzSearch" placeholder="🔍 搜题：输入题干 / 选项 / 解析关键词" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;outline:none;background:var(--card);color:var(--fg)"><div class="prog-txt" id="qzSearchN" style="margin-top:4px"></div></div>
       <div id="mockBar" style="display:none;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
         <span id="mockClock" style="font-weight:700;color:#b91c1c;font-size:14px"></span>
         <button class="tab" id="mockPrev" style="background:var(--card);color:var(--primary);border:1px solid var(--border)">← 上一题</button>
@@ -616,7 +635,7 @@ STAGES.forEach(function(st,si){
     cb.addEventListener("change",function(){
       state[id]=cb.checked;if(!cb.checked)delete state[id];
       row.classList.toggle("done",cb.checked);
-      save();refreshProg();if(cb.checked)toast("✅ 打卡成功，继续保持！");
+      save();refreshProg();if(typeof renderEbb==="function")renderEbb();if(cb.checked)toast("✅ 打卡成功，继续保持！");
     });
     days.appendChild(row);
   });
@@ -773,7 +792,7 @@ renderKBAll();
 /* ================= 在线刷题 ================= */
 var QKEY="excel_contest_quiz_v1";
 var qz={};try{qz=JSON.parse(localStorage.getItem(QKEY))||{}}catch(e){qz={}}
-if(!qz.wrong)qz.wrong={};if(!qz.done)qz.done={};if(!qz.multiSel)qz.multiSel={};
+if(!qz.wrong)qz.wrong={};if(!qz.done)qz.done={};if(!qz.multiSel)qz.multiSel={};if(!qz.fav)qz.fav={};
 if(!qz.today||qz.today.d!==todayStr)qz.today={d:todayStr,n:0,single:0,judge:0,multi:0};
 function qzSave(){try{localStorage.setItem(QKEY,JSON.stringify(qz))}catch(e){}}
 
@@ -786,7 +805,7 @@ var MULTIN=ALLQ.filter(function(q){return q.ty==="multi"}).length;
 var MKEY="excel_contest_mock_v1";
 var mockHist=[];try{mockHist=JSON.parse(localStorage.getItem(MKEY))||[]}catch(e){mockHist=[]}
 function mockHistSave(){try{localStorage.setItem(MKEY,JSON.stringify(mockHist))}catch(e){}}
-var qzMod=0,qzOnlyWrong=false,qzOnlyBook=false,qzOnlyReal=false,qzPos=0,qzOnlyJudge=false,qzOnlyMulti=false,qzMock=false,mock=null,qzCustom=[],qzCustomMode=false;
+var qzMod=0,qzOnlyWrong=false,qzOnlyBook=false,qzOnlyReal=false,qzPos=0,qzOnlyJudge=false,qzOnlyMulti=false,qzOnlyFav=false,qzMock=false,mock=null,qzCustom=[],qzCustomMode=false;
 
 function qzList(){
   if(qzCustomMode)return qzCustom;
@@ -796,6 +815,7 @@ function qzList(){
   if(qzOnlyReal)arr=arr.filter(function(q){return q.s==="真题"||q.s==="官方样题"});
   if(qzOnlyJudge)arr=arr.filter(function(q){return q.ty==="judge"});
   if(qzOnlyMulti)arr=arr.filter(function(q){return q.ty==="multi"});
+  if(qzOnlyFav)arr=arr.filter(function(q){return qz.fav[q.gid]});
   return arr;
 }
 function qzStats(){
@@ -808,6 +828,8 @@ function qzStats(){
   document.getElementById("qzModeReal").textContent="🎯 只看真题（"+REALN+"）";
   document.getElementById("qzModeJudge").textContent="✔️ 判断题（"+JUDGEN+"）";
   document.getElementById("qzModeMulti").textContent="☑️ 多选题（"+MULTIN+"）";
+  var favN=0;for(var fg in qz.fav)if(qz.fav[fg])favN++;
+  document.getElementById("qzModeFav").textContent="⭐ 我的收藏（"+favN+"）";
   if(typeof renderModStat==="function")renderModStat();
 }
 function renderDash(){
@@ -917,7 +939,8 @@ function renderQz(){
   var typeName=(qt==="multi")?" · 多选":((qt==="judge")?" · 判断":"");
   var head=(qzMock&&mock)?('第 '+(pos+1)+' / '+list.length+' 题 · 全真模拟考'+typeName):('第 '+(pos+1)+' / '+list.length+' 题 · 模块 '+q.m+typeName+((qzOnlyWrong&&qz.wrong[q.gid]>1)?(' · <b style="color:#dc2626">已错 '+qz.wrong[q.gid]+' 次</b>'):''));
   card.className="card";
-  card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px"><span class="prog-txt">'+head+'</span>'+srcTag+'</div>'+
+  var favBtn='<button class="tab" id="qzFav" style="background:'+(qz.fav[q.gid]?"#fef3c7":"var(--soft)")+';color:#b45309;padding:5px 11px;font-size:12.5px">'+(qz.fav[q.gid]?"⭐ 已收藏":"☆ 收藏本题")+'</button>';
+  card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px"><span class="prog-txt">'+head+'</span><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+srcTag+favBtn+'</span></div>'+
     '<div style="font-size:15px;font-weight:700;line-height:1.8">'+q.q+'</div>'+
     '<div style="margin-top:12px">'+optsHtml+'</div>'+submitHtml+exHtml;
   card.querySelectorAll(".qz-opt").forEach(function(el){
@@ -925,6 +948,12 @@ function renderQz(){
   });
   var sb=document.getElementById("qzSubmit");
   if(sb)sb.addEventListener("click",function(){qzNext()});
+  var fb=document.getElementById("qzFav");
+  if(fb)fb.addEventListener("click",function(){
+    if(qz.fav[q.gid])delete qz.fav[q.gid];else qz.fav[q.gid]=1;
+    qzSave();if(!(qzMock&&mock))qzStats();renderQz();
+    toast(qz.fav[q.gid]?"⭐ 已收藏，可在「⭐ 我的收藏」集中复习":"已取消收藏");
+  });
 }
 
 /* 键盘速刷：单选/判断 A-E 选 + Enter 下一题；多选 A-E 勾选 + Enter 提交/下一题（仅练习模式） */
@@ -1238,7 +1267,7 @@ document.getElementById("qzNext").addEventListener("click",function(){qzPos++;re
 function qzModeBtn(allId,wrongId,bookId,realId,judgeId,multiId){
   var A=document.getElementById(allId),W=document.getElementById(wrongId),B=document.getElementById(bookId),
       R=document.getElementById(realId),J=document.getElementById(judgeId),M=document.getElementById(multiId);
-  var any=qzOnlyWrong||qzOnlyBook||qzOnlyReal||qzOnlyJudge||qzOnlyMulti;
+  var any=qzOnlyWrong||qzOnlyBook||qzOnlyReal||qzOnlyJudge||qzOnlyMulti||qzOnlyFav;
   A.style.background=any?"var(--soft)":"var(--primary)";
   A.style.color=any?"var(--primary)":"#fff";
   W.style.background=qzOnlyWrong?"var(--primary)":"var(--soft)";
@@ -1251,12 +1280,14 @@ function qzModeBtn(allId,wrongId,bookId,realId,judgeId,multiId){
   J.style.color=qzOnlyJudge?"#fff":"var(--primary)";
   M.style.background=qzOnlyMulti?"var(--primary)":"var(--soft)";
   M.style.color=qzOnlyMulti?"#fff":"var(--primary)";
+  var F=document.getElementById("qzModeFav");
+  if(F){F.style.background=qzOnlyFav?"#b45309":"var(--soft)";F.style.color=qzOnlyFav?"#fff":"#b45309";}
   qzPos=0;renderQz();
 }
 function qzApply(){qzModeBtn("qzModeAll","qzModeWrong","qzModeBook","qzModeReal","qzModeJudge","qzModeMulti")}
 function qzOnly(name){
   qzOnlyWrong=(name==="wrong");qzOnlyBook=(name==="book");qzOnlyReal=(name==="real");
-  qzOnlyJudge=(name==="judge");qzOnlyMulti=(name==="multi");qzCustomMode=false;
+  qzOnlyJudge=(name==="judge");qzOnlyMulti=(name==="multi");qzOnlyFav=(name==="fav");qzCustomMode=false;
   qzApply();
 }
 document.getElementById("qzModeAll").addEventListener("click",function(){qzOnly("all")});
@@ -1265,9 +1296,10 @@ document.getElementById("qzModeBook").addEventListener("click",function(){qzOnly
 document.getElementById("qzModeReal").addEventListener("click",function(){qzOnly("real")});
 document.getElementById("qzModeJudge").addEventListener("click",function(){qzOnly("judge")});
 document.getElementById("qzModeMulti").addEventListener("click",function(){qzOnly("multi")});
+document.getElementById("qzModeFav").addEventListener("click",function(){qzOnly("fav")});
 document.getElementById("qzReset").addEventListener("click",function(){
   if(!confirm("确定清空全部刷题记录和错题本吗？"))return;
-  qz={wrong:{},done:{},multiSel:{}};qzSave();renderQz();toast("已重置刷题记录");
+  qz={wrong:{},done:{},multiSel:{},fav:qz.fav||{}};qzSave();renderQz();toast("已重置刷题记录（收藏已保留）");
 });
 document.getElementById("btnMock").addEventListener("click",function(){startMock()});
 document.getElementById("mockPrev").addEventListener("click",function(){if(!mock)return;mock.pos--;if(mock.pos<0)mock.pos=0;renderQz()});
@@ -1276,6 +1308,98 @@ document.getElementById("mockSubmit").addEventListener("click",function(){if(con
 document.getElementById("mockExit").addEventListener("click",function(){if(!mock||mock.finished)return;if(confirm("退出模拟考？本次作答不会保存。"))exitMock()});
 renderQzChips();renderQz();
 renderTodayCard();
+
+/* ================= 搜题（题干 / 选项 / 解析 关键词直达） ================= */
+(function(){
+  var se=document.getElementById("qzSearch"),nEl=document.getElementById("qzSearchN");
+  if(!se)return;
+  se.addEventListener("input",function(){
+    var kw=se.value.trim().toLowerCase();
+    if(!kw){
+      qzCustom=[];qzCustomMode=false;qzOnlyFav=false;qzOnlyWrong=false;qzOnlyJudge=false;qzOnlyMulti=false;qzOnlyBook=false;qzOnlyReal=false;qzMod=0;qzPos=0;
+      if(nEl)nEl.textContent="";
+      renderQzChips();qzApply();return;
+    }
+    var hit=ALLQ.filter(function(q){
+      return (String(q.q)+" "+(q.o||[]).join(" ")+" "+String(q.ex||"")+" 模块"+q.m+" "+String(q.mt||"")).toLowerCase().indexOf(kw)>=0;
+    });
+    qzCustom=hit;qzCustomMode=true;qzPos=0;
+    if(nEl)nEl.textContent="🔍 命中 "+hit.length+" 题（可直接作答；清空输入框即恢复全部题）";
+    renderQz();
+  });
+})();
+
+/* ================= 考点小抄（一键生成 / 复制 / 打印） ================= */
+function buildCheat(){
+  var L=[],PICK=["大纲要求","核心概念","指标体系","原子与派生","抽样方法","Excel 落地","易错辨析","考试提示"];
+  L.push("Excel 数据分析赛项 · 考点小抄");
+  L.push("省级赛 2026-10-17 开赛 ｜ 生成于 "+todayStr+" ｜ 共 "+(KB1.length+KB2.length)+" 个考点");
+  function put(arr,title){
+    L.push("");L.push("======== "+title+" ========");
+    arr.forEach(function(k){
+      L.push("");
+      L.push("【"+k.t+"】"+(k.chip?"（"+k.chip+"）":""));
+      (k.rows||[]).forEach(function(r){if(PICK.indexOf(r[0])>=0)L.push("· "+r[0]+"："+r[1])});
+    });
+  }
+  put(KB1,"科目一 · 数据分析基础知识");
+  put(KB2,"科目二 · 数据分析专业能力");
+  return L.join("\n");
+}
+function renderCheat(){
+  var btn=document.getElementById("btnCheat");if(!btn)return;
+  btn.addEventListener("click",function(){
+    var box=document.getElementById("cheatBox");if(!box)return;
+    var txt=buildCheat();
+    box.className="card";
+    box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:15.5px">📄 考点小抄</b><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="tab" id="cheatCopy" style="background:var(--primary);color:#fff">📋 复制全文</button><button class="tab" id="cheatPrint" style="background:var(--soft);color:var(--primary)">🖨️ 打印 / 存 PDF</button><button class="tab" id="cheatClose" style="background:var(--soft);color:var(--muted)">收起</button></span></div>'+
+      '<div id="cheatTxt" style="white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.85;margin-top:10px;max-height:520px;overflow:auto;background:var(--soft);padding:12px 14px;border-radius:12px">'+txt.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</div>';
+    document.getElementById("cheatCopy").addEventListener("click",function(){
+      var t=document.getElementById("cheatTxt").innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast("✅ 小抄已复制，可粘贴到备忘录")},function(){fallbackCopy(t,function(){toast("✅ 小抄已复制")})});
+      else fallbackCopy(t,function(){toast("✅ 小抄已复制")});
+    });
+    document.getElementById("cheatPrint").addEventListener("click",function(){window.print()});
+    document.getElementById("cheatClose").addEventListener("click",function(){box.innerHTML="";box.className=""});
+    box.scrollIntoView({behavior:"smooth",block:"start"});
+  });
+}
+renderCheat();
+
+/* ================= 艾宾浩斯复习提醒（1/2/4/7/15 天遗忘曲线） ================= */
+function renderEbb(){
+  var box=document.getElementById("ebb");if(!box)return;
+  var learned=[];
+  STAGES.forEach(function(st,si){
+    st.days.forEach(function(d,di){
+      if(state["s"+si+"d"+di])learned.push({date:d[0],tag:d[3],task:d[4]});
+    });
+  });
+  var CYCLE=[1,2,4,7,15],NAME={1:"第 1 天",2:"第 2 天",4:"第 4 天",7:"第 7 天",15:"第 15 天"};
+  var t0=new Date(todayStr+"T00:00:00").getTime();
+  var items=[];
+  learned.forEach(function(l){
+    var ld=new Date(l.date+"T00:00:00").getTime();
+    var diff=Math.round((t0-ld)/864e5);
+    if(CYCLE.indexOf(diff)>=0)items.push({diff:diff,l:l});
+  });
+  items.sort(function(a,b){return a.diff-b.diff});
+  var html='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:15.5px">🔔 艾宾浩斯复习提醒</b><span class="prog-txt">已打卡 '+learned.length+' 天 · 遗忘曲线 1/2/4/7/15 天</span></div>';
+  if(!items.length){
+    html+='<div style="margin-top:8px;font-size:13.8px;color:var(--muted);line-height:1.8">'+(learned.length?"今天没有到期的复习任务——可去「🔁 只刷错题」巩固薄弱点。":"还没有打卡记录。先去「逐日计划」打卡，系统会在第 1 / 2 / 4 / 7 / 15 天自动提醒你回头复习。")+'</div>';
+  }else{
+    html+='<div style="margin-top:8px;font-size:13.8px;line-height:1.9">'+items.map(function(it){
+      return '<div style="padding:7px 0;border-top:1px solid var(--border)"><span class="kb-chip chip-know">'+NAME[it.diff]+'复习</span> <b>'+it.l.tag+'</b> · '+it.l.date+'　<span style="color:var(--muted)">'+it.l.task.slice(0,32)+(it.l.task.length>32?"…":"")+'</span></div>';
+    }).join("")+'</div>'+
+    '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="tab" id="ebbQuiz" style="background:var(--primary);color:#fff">🎯 去复习第一个</button><button class="tab" id="ebbWrong" style="background:var(--soft);color:var(--primary)">🔁 顺手清错题</button></div>';
+  }
+  box.innerHTML=html;
+  var eq=document.getElementById("ebbQuiz");
+  if(eq)eq.addEventListener("click",function(){var t=items[0].l;dayGo(t.tag,t.task)});
+  var ew=document.getElementById("ebbWrong");
+  if(ew)ew.addEventListener("click",function(){showPanel("p7");qzOnly("wrong")});
+}
+renderEbb();
 
 /* ================= 官方入口 ================= */
 var LINKS=[
