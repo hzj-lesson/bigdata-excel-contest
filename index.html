@@ -309,7 +309,7 @@ document.getElementById("collapseAll").onclick=function(){document.querySelector
 document.getElementById("clearWrong").onclick=function(){wrong={};save();refreshWrong();document.querySelectorAll(".mini").forEach(function(b){if(b.textContent.indexOf("已标记")>=0){b.classList.remove("on");b.textContent="🔖 标记错题";}});toast("已清空错题标记");};
 
 
-/* ===== 2026-09-07 增强：全真模拟考 · 错题重练 · 换设备同步码（不改动原有逻辑，只追加） ===== */
+/* ===== 错题重练 · 换设备同步码（不改动原有逻辑，只追加） ===== */
 function qKind(q){if(q.type==="prac")return "prac";return q.type==="multi"?"multi":((q.type==="judge"||(q.o&&q.o.length===2&&(q.o[0]==="正确"||q.o[0]==="错误")))?"judge":"single");}
 function correctIdx(q){var r=[];q.o.forEach(function(o,i){if(isAns(q,i))r.push(i);});return r;}
 function allPool(){var seen={},pool=[];
@@ -317,125 +317,6 @@ function allPool(){var seen={},pool=[];
   (DATA.practices||[]).forEach(function(p){(p.qs||[]).forEach(function(q){if(!seen[q.id]){seen[q.id]=1;pool.push(q);}});});
   return pool;}
 function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
-
-/* ---------- 全真模拟考 ---------- */
-var MKEY="excel_route_mock_v2";
-var mockHist=[];try{mockHist=JSON.parse(localStorage.getItem(MKEY))||[]}catch(e){}
-var mock=null,mockTimer=null;
-function startMock(){
-  if(mock&&!mock.finished){if(!confirm("已有一场进行中的模拟考，重新开始将丢弃该场作答？"))return;clearInterval(mockTimer);}
-  var by={judge:[],single:[],multi:[],prac:[]};
-  allPool().forEach(function(q){by[qKind(q)].push(q);});
-  if(by.judge.length<10||by.single.length<40||by.multi.length<20||by.prac.length<15){toast("题库不足，无法组卷");return;}
-  mock={list:shuffle(by.judge).slice(0,10).concat(shuffle(by.single).slice(0,40),shuffle(by.multi).slice(0,20),shuffle(by.prac).slice(0,15)),ans:{},pos:0,end:Date.now()+100*60*1000,finished:false};
-  renderMock();mockTimer=setInterval(mockTick,1000);mockTick();
-}
-function mockOvEl(){var ov=document.getElementById("mockOv");
-  if(!ov){ov=document.createElement("div");ov.id="mockOv";ov.style.cssText="position:fixed;inset:0;background:rgba(15,30,60,.55);z-index:998;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow:auto";document.body.appendChild(ov);}return ov;}
-function mockTick(){
-  var el=document.getElementById("mockClock");if(!el||!mock||mock.finished)return;
-  var d=mock.end-Date.now();
-  if(d<=0){toast("⏰ 时间到，自动交卷");submitMock();return;}
-  el.textContent="⏳ "+Math.floor(d/6e4)+":"+("0"+Math.floor(d%6e4/1e3)).slice(-2);
-}
-function mockPick(el){
-  if(!mock||mock.finished)return;
-  var q=mock.list[mock.pos],t=qKind(q),i=+el.dataset.i;
-  if(t==="multi"){
-    var cur=(mock.ans[q.id]||[]).slice(),k=cur.indexOf(i);
-    if(k>=0)cur.splice(k,1);else cur.push(i);
-    mock.ans[q.id]=cur;
-    el.classList.toggle("sel");
-  }else{
-    mock.ans[q.id]=i;
-    var box=el.closest(".opts");
-    box.querySelectorAll(".opt").forEach(function(o){o.classList.remove("sel");});
-    el.classList.add("sel");
-  }
-}
-function mockNav(d){if(!mock||mock.finished)return;mock.pos=Math.max(0,Math.min(mock.list.length-1,mock.pos+d));renderMock();}
-function mockGrade(){
-  if(!mock||mock.finished)return;
-  var q=mock.list[mock.pos];
-  if(!Array.isArray(mock.ans[q.id])||!mock.ans[q.id].length){toast("请先选择至少一个选项");return;}
-  mockNav(1);
-}
-function renderMock(){
-  var ov=mockOvEl();
-  var q=mock.list[mock.pos],t=qKind(q);
-  var ans=mock.ans[q.id];
-  var opts=q.o.map(function(o,i){
-    var sel=(t==="multi")?(Array.isArray(ans)&&ans.indexOf(i)>=0):(ans===i);
-    return '<div class="opt'+(sel?" sel":"")+'" data-i="'+i+'" onclick="mockPick(this)"><span class="lk">'+optLetter(i)+'</span><span>'+esc(o)+'</span></div>';
-  }).join("");
-  ov.innerHTML='<div class="card" style="max-width:660px;width:100%;margin-top:18px">'+
-    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>🎯 全真模拟考 · 第 '+(mock.pos+1)+' / '+mock.list.length+' 题 · '+(t==="prac"?"实操（每题 2 分）":(t==="multi"?"多选（每题 1 分）":(t==="judge"?"判断（每题 1 分）":"单选（每题 1 分）")))+'</b><b id="mockClock" style="color:var(--err)"></b></div>'+
-    '<div class="qt" style="margin-top:12px;font-weight:700;font-size:15px;line-height:1.8">'+esc(q.q)+'</div>'+
-    '<div class="opts" style="margin-top:10px">'+opts+'</div>'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">'+
-      (t==="multi"?'<button class="tbtn" onclick="mockGrade()">✅ 锁定本题</button>':'')+
-      '<button class="tbtn" onclick="mockNav(-1)">← 上一题</button><button class="tbtn" onclick="mockNav(1)">下一题 →</button>'+
-      '<button class="tbtn" id="mockSubmitBtn" style="border-color:var(--err);color:var(--err)">🏁 交卷</button>'+
-      '<button class="tbtn" onclick="exitMock()">退出</button>'+
-    '</div>'+
-    '<div class="note" style="margin-top:10px">判断 10＋单选 40＋多选 20＋实操 15＝85 题 · 满分 100 · 限时 100 分钟。冲一等奖需进入「本校同赛项前 10%」（建议稳拿 85+ 分；70 分可免考初级数据分析师证书科目一）。作答自动暂存，交卷前可返回修改。</div>'+
-  '</div>';
-  document.getElementById("mockSubmitBtn").onclick=function(){if(confirm("确定交卷？未作答的题计 0 分。"))submitMock();};
-}
-function exitMock(){
-  if(!mock)return;
-  if(!mock.finished&&!confirm("退出模拟考？本次作答不会保存。"))return;
-  clearInterval(mockTimer);mock=null;
-  var ov=document.getElementById("mockOv");if(ov&&ov.parentNode)ov.parentNode.removeChild(ov);
-}
-function submitMock(){
-  if(!mock||mock.finished)return;
-  clearInterval(mockTimer);mock.finished=true;
-  var sc=0,by={single:[0,0],judge:[0,0],multi:[0,0],prac:[0,0]},wrongs=[];
-  mock.list.forEach(function(q){
-    var t=qKind(q),a=mock.ans[q.id],ci=correctIdx(q),ok=false;
-    if(t==="multi"){ok=Array.isArray(a)&&a.length===ci.length&&ci.every(function(i){return a.indexOf(i)>=0;});if(ok)sc+=1;}
-    else if(t==="prac"){ok=a===ci[0];if(ok)sc+=2;}
-    else{ok=a===ci[0];if(ok)sc+=1;}
-    by[t][0]++;if(ok)by[t][1]++;else wrongs.push(q);
-  });
-  wrongs.forEach(function(q){wrong[q.id]=1;});save();refreshWrong();
-  mockHist.push({score:sc,at:new Date().toISOString()});try{localStorage.setItem(MKEY,JSON.stringify(mockHist))}catch(e){}
-  var pct=function(n,t){return t?Math.round(n/t*100):0;};
-  var list=wrongs.map(function(q){
-    var t=qKind(q),a=mock.ans[q.id];
-    var yours=(t==="multi")?(Array.isArray(a)?a.map(optLetter).join("、"):"未答"):(a!==undefined?optLetter(a):"未答");
-    var right=correctIdx(q).map(optLetter).join("、");
-    return '<div style="padding:8px 0;border-top:1px solid var(--border)"><b style="font-size:13.5px">'+esc(q.q)+'</b>'+
-      '<div style="font-size:12.5px;margin-top:4px">你的答案 <b style="color:var(--err)">'+esc(yours)+'</b> ｜ 正确答案 <b style="color:#16a34a">'+esc(right)+'</b></div>'+
-      '<div style="font-size:12.5px;color:var(--muted);margin-top:2px">'+esc(q.ex||"")+'</div></div>';
-  }).join("");
-  var hist=mockHist.length>1?('<div style="font-size:12.5px;color:var(--muted);margin-top:6px">历次成绩：'+mockHist.map(function(h){return h.score;}).join(" → ")+'</div>'):"";
-  var ov=mockOvEl();
-  var prizeLine=85, certLine=70;
-  var prizeMsg = sc>=prizeLine
-    ? '🏆 稳进一等奖区间！（本校同赛项前 10%）——保持手感，国赛见。'
-    : (sc>=certLine
-      ? '✅ 已过 <b>70 分证书线</b>（可免考初级数据分析师证书科目一）。再冲 <b style="color:var(--primary)">'+(prizeLine-sc)+'</b> 分就能稳拿一等奖。'
-      : '距 <b>70 分证书线</b>还差 <b style="color:var(--err)">'+(certLine-sc)+'</b> 分。先稳住证书线，错题已自动入册，重练就是提分最快的路。');
-  ov.innerHTML='<div class="card" style="max-width:660px;width:100%;margin-top:18px">'+
-    '<div style="text-align:center"><div style="font-size:38px;font-weight:800">'+sc+' <span style="font-size:15px;color:var(--muted)">/ 100 分</span></div>'+
-    '<div style="font-size:13.5px;margin-top:6px">'+prizeMsg+'</div>'+hist+'</div>'+
-    '<div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:12px;font-size:13px">'+
-      '<span>单选 '+by.single[1]+'/'+by.single[0]+'（'+pct(by.single[1],by.single[0])+'%）</span>'+
-      '<span>判断 '+by.judge[1]+'/'+by.judge[0]+'（'+pct(by.judge[1],by.judge[0])+'%）</span>'+
-      '<span>多选 '+by.multi[1]+'/'+by.multi[0]+'（'+pct(by.multi[1],by.multi[0])+'%）</span>'+
-      '<span>实操 '+by.prac[1]+'/'+by.prac[0]+'（'+pct(by.prac[1],by.prac[0])+'%）</span>'+
-    '</div>'+
-    (wrongs.length?('<div style="margin-top:14px"><b>📝 错题清单（'+wrongs.length+' 道，已加入错题本）</b>'+list+'</div>'):'<div style="text-align:center;margin-top:14px">🎉 全对，太强了！</div>')+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px">'+
-      '<button class="tbtn" onclick="closeMock()">关闭</button>'+
-      '<button class="tbtn" onclick="exitMock();redoWrong()">🔁 重练错题</button>'+
-      '<button class="tbtn" onclick="exitMock();startMock()">再考一次</button>'+
-    '</div></div>';
-  ov.scrollTop=0;
-}
-function closeMock(){exitMock();}
 
 /* ---------- 错题重练 ---------- */
 var redoList=[],redoPos=0,redoAns={};
