@@ -136,7 +136,24 @@ a.anc:hover{text-decoration:underline}
 .nav-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:11px;color:var(--muted);align-items:center}
 .nav-legend .nc{cursor:default;width:16px;height:16px;aspect-ratio:auto}
 .exam-nav{display:flex;justify-content:space-between;margin-top:14px}
-@media(max-width:680px){.exam-body{flex-direction:column;overflow:auto}.exam-side{flex:0 0 auto}.nav-grid{grid-template-columns:repeat(8,1fr)}}
+/* 手机端适配：题目优先，答题卡折叠成一条（展开才跳题） */
+.navfold{border:1px solid var(--border);border-radius:10px;margin-top:10px;background:#fbfdff}
+.navfold>summary{cursor:pointer;font-weight:700;font-size:13px;padding:10px 12px;list-style:none;display:flex;align-items:center;gap:6px}
+.navfold>summary::-webkit-details-marker{display:none}
+.navfold>summary:before{content:"▸ ";color:var(--primary)}
+.navfold[open]>summary:before{content:"▾ "}
+.navfold .nav-grid{padding:2px 12px 10px}
+.navfold .nav-legend{padding:0 12px 10px;margin-top:0}
+@media(max-width:680px){
+  .exam-body{flex-direction:column;overflow:auto}
+  .exam-main{flex:0 0 auto;overflow:visible}
+  .exam-side{flex:0 0 auto}
+  .nav-grid{grid-template-columns:repeat(10,1fr);gap:4px}
+  .nc{aspect-ratio:auto;padding:7px 0;font-size:11.5px;border-radius:6px}
+  .qt{font-size:15.5px}
+  .opt{font-size:14.5px;padding:11px 12px}
+  .exam-nav{gap:8px}
+}
 /* practice mode (逐题练习) */
 .nc.cok{background:#dcfce7;color:#15803d;border-color:#bbf7d0}
 .nc.cno{background:#fee2e2;color:#b91c1c;border-color:#fecaca}
@@ -566,7 +583,7 @@ function syncModal(mode){
 }
 
 /* ===== 逐题练习模式（做一道出一道答案，错入错题本，保留做题记录） ===== */
-var prac=null;
+var prac=null, pracGridOpen=null; /* pracGridOpen: 题号导航折叠状态（null=按屏宽默认：宽屏展开/手机收起） */
 function startPractice(pid){
   var p=DATA.practices.filter(function(x){return x.id===pid})[0]; if(!p)return;
   var r=records[pid]||{}; var sel={},graded={};
@@ -668,22 +685,28 @@ function renderPracticeQ(){
   var sb=document.getElementById("pracSubmit"); if(sb)sb.onclick=pracGradeMulti;
   var rb=document.getElementById("pracRedo"); if(rb)rb.onclick=pracRedoCurrent;
   var pos=document.getElementById("pracPos"); if(pos)pos.textContent=" 第 "+(prac.idx+1)+" / "+prac.p.qs.length;
-  document.querySelector(".exam-main").scrollTop=0;
+  var em=document.querySelector(".exam-main"); if(em)em.scrollTop=0;
+  var eb=document.querySelector(".exam-body"); if(eb)eb.scrollTop=0;   /* 手机端整体滚动，跳题后回到题目顶部 */
   renderPracSide();
 }
 function renderPracSide(){
   var total=prac.p.qs.length, done=0, correct=0;
   prac.p.qs.forEach(function(q){ if(prac.graded[q.id]){done++; if(pracCompute(q,prac.sel[q.id]))correct++;} });
   var acc=done?Math.round(correct/done*100):0;
-  var accEl=document.getElementById("pracAcc"); if(accEl)accEl.textContent="正确率 "+acc+"% · 已练 "+done+"/"+total;
+  var narrow=(window.innerWidth<=680);
+  var accEl=document.getElementById("pracAcc"); if(accEl)accEl.textContent=(narrow?"":"已练 "+done+"/"+total+" · ")+"正确率 "+acc+"%";
   var side=document.getElementById("pracSide");
   if(!side)return;
+  var openAttr=((pracGridOpen===null)?(!narrow):pracGridOpen)?" open":"";
   side.innerHTML='<div class="nav-title">本卷进度</div>'+
     '<div style="font-size:13px;margin-bottom:6px">已练 <b>'+done+'</b> / '+total+'　正确率 <b style="color:'+(acc>=80?'var(--ok)':'var(--warn)')+'">'+acc+'%</b></div>'+
-    '<div class="bar" style="height:8px;background:var(--soft);border-radius:6px;overflow:hidden;margin-bottom:12px"><i style="display:block;height:100%;width:'+(total?done/total*100:0)+'%;background:linear-gradient(90deg,var(--primary),var(--primary-2))"></i></div>'+
-    '<div class="nav-title">题目</div><div class="nav-grid" id="pracGrid"></div>'+
-    '<div class="nav-legend"><span class="nc un">未练</span><span class="nc cok">对</span><span class="nc cno">错</span></div>'+
+    '<div class="bar" style="height:8px;background:var(--soft);border-radius:6px;overflow:hidden;margin-bottom:4px"><i style="display:block;height:100%;width:'+(total?done/total*100:0)+'%;background:linear-gradient(90deg,var(--primary),var(--primary-2))"></i></div>'+
+    '<details class="navfold" id="pracFold"'+openAttr+'><summary>📋 题号导航（点开跳题）</summary>'+
+    '<div class="nav-grid" id="pracGrid"></div>'+
+    '<div class="nav-legend"><span class="nc un">未练</span><span class="nc cok">对</span><span class="nc cno">错</span></div></details>'+
     '<div class="toolbar" style="margin-top:12px"><button class="tbtn" id="pracReset">重置本卷进度</button></div>';
+  var fold=document.getElementById("pracFold");
+  if(fold)fold.addEventListener("toggle",function(){pracGridOpen=this.open;});
   var g=document.getElementById("pracGrid");
   g.innerHTML=prac.p.qs.map(function(q,idx){
     var cls="nc ";
@@ -702,7 +725,7 @@ function renderPracSide(){
     renderPracticeQ(); renderRecords(); toast("已重置本卷进度");
   };
 }
-function pracGoto(i){prac.idx=i;renderPracticeQ();}
+function pracGoto(i){prac.idx=i; if(window.innerWidth<=680)pracGridOpen=false; /* 手机端跳题后自动收起导航，露出题目 */ renderPracticeQ();}
 /* 重做本题：清掉该题的判分与记录，变回未答状态，重做后按新结果重新计入 */
 function pracRedoCurrent(){
   var q=prac.p.qs[prac.idx];
