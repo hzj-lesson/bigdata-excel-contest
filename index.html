@@ -230,10 +230,38 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(state));localStorage
 var RKEY="excel_practice_records_v2";
 var records={}; try{records=JSON.parse(localStorage.getItem(RKEY))||{}}catch(e){}
 function saveRec(){try{localStorage.setItem(RKEY,JSON.stringify(records));}catch(e){}}
-function pRec(pid){ if(!records[pid])records[pid]={answers:{},log:[]}; return records[pid]; }
+function pRec(pid){ if(!records[pid])records[pid]={answers:{},log:[],last:0}; return records[pid]; }
 function recAnswer(pid,qid,sel,ok){
   var r=pRec(pid);
   r.answers[qid]={sel:sel,ok:ok};
+  r.last=Date.now();
+  r.log.unshift({q:qid,ok:ok,t:Date.now()});
+  if(r.log.length>60)r.log.length=60;
+  saveRec();
+}
+function qPidOf(qid){
+  for(var k=0;k<DATA.practices.length;k++){
+    var p=DATA.practices[k];
+    for(var m=0;m<p.qs.length;m++) if(p.qs[m].id===qid) return p.id;
+  }
+  return null;
+}
+/* 统一答题入口：任何答题方式（逐题练习 / 展开直接点 / 错题重练）都走这里，
+   保证「答错必进错题本 + 做题记录同步更新」，避免各入口行为不一致 */
+function commitAnswer(qid,sel,ok){
+  if(ok){ if(wrong[qid])delete wrong[qid]; } else wrong[qid]=1;
+  var pid=qPidOf(qid);
+  if(pid) recAnswer(pid,qid,sel,ok);
+  answered[qid]=1;
+  save(); refreshWrong(); refreshProg(); renderRecords();
+}
+/* 错题重练结果回写到做题记录，避免「重练答对了但记录仍记为错」 */
+function recSyncFromRedo(qid,ok){
+  var pid=qPidOf(qid); if(!pid)return;
+  var r=records[pid];
+  if(!r||!r.answers||!r.answers[qid])return;
+  r.answers[qid].ok=ok;
+  r.last=Date.now();
   r.log.unshift({q:qid,ok:ok,t:Date.now()});
   if(r.log.length>60)r.log.length=60;
   saveRec();
@@ -272,7 +300,7 @@ function unitHTML(u){
     if(u.refUnit){
       qblock='<div class="ref">本单元为方法/机器学习总览，配套练习已并入 <a class="anc" href="#'+u.refUnit+'">「数据预处理」单元</a>，可前往该单元刷题。</div>';
     } else {
-      qblock='<div class="qhead">🎯 配套练习 <span class="cnt">'+u.qs.length+' 题 · 点选项看答案</span></div>'+u.qs.map(qHTML).join("");
+      qblock='<div class="qhead">🎯 配套练习 <span class="cnt">'+u.qs.length+' 题 · 点选项看答案</span></div>'+u.qs.map(function(q){return qHTML(q,null);}).join("");
     }
   } else {
     qblock='<div class="ref">📖 本单元为知识点复习，配套练习请做下方「两套官方模拟题」。</div>';
@@ -289,19 +317,27 @@ function unitHTML(u){
     '<div class="ubody">'+(open?'':'' )+rows+qblock+'</div>'+
   '</div>';
 }
-function qHTML(q){
+function qHTML(q,pid){
   var jt=(q.type==="judge");
   var multi=(q.type==="multi");
+  // 若之前已练过（做题记录里有），刷新后仍显示当时的判分结果与解析
+  var rec=(pid&&records[pid]&&records[pid].answers)?records[pid].answers[q.id]:null;
+  var g=!!rec, sel=rec?rec.sel:undefined;
+  var ci=[]; q.o.forEach(function(o,i){if(isAns(q,i))ci.push(i);});
   var opts=q.o.map(function(o,i){
+    var on = multi?(Array.isArray(sel)&&sel.indexOf(i)>=0):(sel===i);
+    var cls="opt";
+    if(g){ if(ci.indexOf(i)>=0)cls+=" correct"; else if(on)cls+=" wrong"; }
     var lk = jt ? (o==="正确"?"✓":"✗") : optLetter(i);
     var lkcls = jt ? ("lk jdg "+(o==="正确"?"ok":"no")) : "lk";
-    return '<div class="opt" data-i="'+i+'" onclick="pick(this,\''+q.id+'\')"><span class="'+lkcls+'">'+lk+'</span><span>'+esc(o)+'</span></div>';
+    return '<div class="'+cls+'" data-i="'+i+'"'+(g?'':' onclick="pick(this,\''+q.id+'\')"')+'><span class="'+lkcls+'">'+lk+'</span><span>'+esc(o)+'</span></div>';
   }).join("");
-  var submit = multi?'<button class="mini" onclick="gradeMulti(\''+q.id+'\')">提交答案</button>':'';
-  return '<div class="q" id="q-'+q.id+'">'+
+  var submit = (multi&&!g)?'<button class="mini" onclick="gradeMulti(\''+q.id+'\')">提交答案</button>':'';
+  var resTxt = g?(rec.ok?"✅ 答对了":"❌ 答错了"):"";
+  return '<div class="q'+(g?" done":"")+'" id="q-'+q.id+'">'+
     '<div class="qt">'+esc(q.q)+'</div>'+
     '<div class="opts">'+opts+'</div>'+
-    '<div class="qbar">'+submit+'<span class="res"></span>'+
+    '<div class="qbar">'+submit+'<span class="res '+(g?(rec.ok?"ok":"no"):"")+'">'+resTxt+'</span>'+
     '<button class="mini '+(wrong[q.id]?"on":"")+'" onclick="toggleWrong(\''+q.id+'\',this)">🔖 '+(wrong[q.id]?"已标记错题":"标记错题")+'</button></div>'+
     '<div class="ex">'+esc(q.ex||"")+'</div>'+
   '</div>';
@@ -322,7 +358,7 @@ function pick(el,id){
   box.querySelectorAll(".opt").forEach(function(o,i){ if(isAns(q,i))o.classList.add("correct"); });
   el.classList.add(ok?"correct":"wrong");
   box.classList.add("done");
-  answered[id]=1; save(); refreshProg();
+  commitAnswer(id,idx,ok);
   var res=box.querySelector(".res"); res.textContent=ok?"✅ 答对了":"❌ 答错了"; res.className="res "+(ok?"ok":"no");
 }
 function gradeMulti(id){
@@ -336,7 +372,7 @@ function gradeMulti(id){
     if(correct.indexOf(i)>=0)o.classList.add("correct");
     else if(sel.indexOf(i)>=0)o.classList.add("wrong");});
   box.classList.add("done");
-  answered[id]=1; save(); refreshProg();
+  commitAnswer(id,sel,right);
   var res=box.querySelector(".res"); res.textContent=right?"✅ 全部选对":"❌ 有漏选或错选"; res.className="res "+(right?"ok":"no");
 }
 function toggleWrong(id,btn){
@@ -359,7 +395,7 @@ function refreshWrong(){document.getElementById("wrongTxt").textContent="错题 
 
 /* ---- render practices ---- */
 function pracHTML(p){
-  var qs=p.qs.map(qHTML).join("");
+  var qs=p.qs.map(function(q){return qHTML(q,p.id);}).join("");
   return '<div class="paper">'+
     '<div class="paper-hd"><div><b>'+esc(p.title)+'</b><span class="cnt">'+p.qs.length+' 题</span></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
@@ -433,9 +469,10 @@ function renderRedo(){
     box.querySelectorAll(".opt").forEach(function(o,i2){o.onclick=null;if(ci.indexOf(i2)>=0)o.classList.add("correct");else if((t2==="multi")?(Array.isArray(a)&&a.indexOf(i2)>=0):(a===i2))o.classList.add("wrong");});
     var res=document.getElementById("redoRes");
     if(ok){
-      delete wrong[q.id];save();refreshWrong();
+      delete wrong[q.id]; recSyncFromRedo(q.id,true); save();refreshWrong();renderRecords();
       res.innerHTML='<div class="note" style="border:1px solid var(--ok)">✅ 答对了！已自动移出错题本（剩余 '+Object.keys(wrong).length+' 道）</div>';
     }else{
+      recSyncFromRedo(q.id,false); renderRecords();
       res.innerHTML='<div class="note" style="border:1px solid var(--err)">❌ 答错了 · 正确答案 '+ci.map(optLetter).join("、")+'——保留在错题本，下次再来</div>';
     }
     document.getElementById("redoCheck").style.display="none";
@@ -468,7 +505,7 @@ function syncModal(mode){
     html='<b>🔄 换设备同步</b><p class="note" style="margin-top:8px">进度只保存在本机浏览器。旧设备生成同步码 → 微信发给「文件传输助手」→ 新设备粘贴导入，学习进度与错题本无缝搬家。</p>'+
       '<div class="toolbar" style="margin-top:12px"><button class="tbtn" id="syncOut">📤 旧设备 · 生成同步码</button><button class="tbtn" id="syncIn">📥 新设备 · 粘贴导入</button><button class="tbtn" id="syncClose">关闭</button></div>';
   }else if(mode==="out"){
-    var code="";try{code=syncEncode({app:"excel-route",v:2,at:new Date().toISOString(),done:state,wrong:wrong})}catch(e){}
+    var code="";try{code=syncEncode({app:"excel-route",v:3,at:new Date().toISOString(),done:state,wrong:wrong,rec:records,ans:answered})}catch(e){}
     html='<b>📤 同步码已生成</b><p class="note" style="margin-top:8px">复制下面整段（EC1. 开头）→ 微信发给「文件传输助手」→ 在新设备打开本页 → 「换设备同步」→「粘贴导入」。</p>'+
       '<textarea id="syncTa" readonly style="width:100%;height:110px;margin-top:8px;padding:10px;border:1.5px solid var(--border);border-radius:12px;font-size:11.5px;font-family:monospace;word-break:break-all">'+code+'</textarea>'+
       '<div class="toolbar" style="margin-top:10px"><button class="tbtn" id="syncCopy">📋 复制同步码</button><button class="tbtn" id="syncBack">← 返回</button></div>';
@@ -497,6 +534,8 @@ function syncModal(mode){
     if(!confirm("导入将覆盖本机进度与错题本，确定继续？"))return;
     if(d.done)localStorage.setItem(KEY,JSON.stringify(d.done));
     if(d.wrong)localStorage.setItem(WKEY,JSON.stringify(d.wrong));
+    if(d.rec)localStorage.setItem(RKEY,JSON.stringify(d.rec));
+    if(d.ans)localStorage.setItem(QKEY,JSON.stringify(d.ans));
     toast("✅ 同步完成，正在刷新…");setTimeout(function(){location.reload()},600);
   };
 }
@@ -598,7 +637,8 @@ function examSubmit(){
     var a=exam.answers[q.id]; var ok=false;
     if(q.type==="multi"){var ci=[];q.o.forEach(function(o,i){if(isAns(q,i))ci.push(i);});ok=Array.isArray(a)&&a.length===ci.length&&ci.every(function(i){return a.indexOf(i)>=0;});}
     else{ok=(a===correctIdx(q)[0]);}
-    if(a===undefined||a===null||(Array.isArray(a)&&a.length===0))unans++;
+    var blank=(a===undefined||a===null||(Array.isArray(a)&&a.length===0));
+    if(blank)unans++; else recAnswer(p.id,q.id,a,ok);   // 模考结果也计入做题记录
     if(ok)correct++; else wrongs.push(q);
   });
   var acc=(correct/total*100).toFixed(1);
@@ -628,8 +668,16 @@ function startPractice(pid){
   var p=DATA.practices.filter(function(x){return x.id===pid})[0]; if(!p)return;
   var r=records[pid]||{}; var sel={},graded={};
   for(var k in (r.answers||{})){ sel[k]=r.answers[k].sel; graded[k]=true; }
-  prac={pid:pid,p:p,idx:0,sel:sel,graded:graded};
+  // 接着上次进度：跳到第一道还没练过的题
+  var idx=0, doneCnt=0, allDone=true;
+  for(var i=0;i<p.qs.length;i++){
+    if(graded[p.qs[i].id]){doneCnt++; continue;}
+    allDone=false; idx=i; break;
+  }
+  prac={pid:pid,p:p,idx:idx,sel:sel,graded:graded};
   openPractice();
+  if(allDone&&doneCnt>0) toast("本卷已全部练完（"+doneCnt+"/"+p.qs.length+"），可从右侧题号重看");
+  else if(doneCnt>0) toast("已跳到第 "+(idx+1)+" 题接着练（已练 "+doneCnt+" 题）");
 }
 function openPractice(){
   var ov=document.getElementById("pracOv"); if(ov)ov.parentNode.removeChild(ov);
@@ -677,10 +725,7 @@ function pracCommit(q){
   var sel=prac.sel[q.id];
   var ok=pracCompute(q,sel);
   prac.graded[q.id]=true;
-  if(ok){ if(wrong[q.id])delete wrong[q.id]; } else wrong[q.id]=1;
-  save();refreshWrong();
-  recAnswer(prac.pid,q.id,sel,ok);
-  answered[q.id]=1;save();refreshProg();renderRecords();
+  commitAnswer(q.id,sel,ok);
   renderPracticeQ();
 }
 function renderPracticeQ(){
@@ -717,6 +762,7 @@ function renderPracticeQ(){
   document.getElementById("pracPrev").onclick=function(){if(prac.idx>0){prac.idx--;renderPracticeQ();}};
   document.getElementById("pracNext").onclick=function(){if(prac.idx<prac.p.qs.length-1){prac.idx++;renderPracticeQ();}else toast("已是最后一题，可退出查看「做题记录」");};
   var sb=document.getElementById("pracSubmit"); if(sb)sb.onclick=pracGradeMulti;
+  var pos=document.getElementById("pracPos"); if(pos)pos.textContent=" 第 "+(prac.idx+1)+" / "+prac.p.qs.length;
   document.querySelector(".exam-main").scrollTop=0;
   renderPracSide();
 }
@@ -743,8 +789,11 @@ function renderPracSide(){
   }).join("");
   document.getElementById("pracReset").onclick=function(){
     if(!confirm("重置本卷练习进度？错题本中由该卷产生的错题不会自动移除。"))return;
+    var p0=prac.p;
     delete records[prac.pid]; saveRec();
-    prac={pid:prac.pid,p:prac.p,idx:0,sel:{},graded:{}};
+    p0.qs.forEach(function(q){delete answered[q.id];});
+    save(); refreshProg();
+    prac={pid:prac.pid,p:p0,idx:0,sel:{},graded:{}};
     renderPracticeQ(); renderRecords(); toast("已重置本卷进度");
   };
 }
