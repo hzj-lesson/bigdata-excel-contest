@@ -165,9 +165,40 @@ a.anc:hover{text-decoration:underline}
   .bkph{font-weight:700;color:var(--primary);font-size:13.5px;margin-bottom:4px}
   .bkp{margin:0;padding-left:20px;list-style:disc}
   .bkp li{font-size:13px;line-height:1.62;margin:3px 0;color:var(--fg)}
-  .bkex{margin:0;padding-left:20px;list-style:decimal}
-  .bkex li{font-size:13px;line-height:1.62;margin:3px 0;color:var(--fg)}
-  @media(max-width:560px){.bkp li,.bkex li{font-size:12.5px}}
+  /* 教材练习题 · 卡片化渲染 */
+  .bkex-row .k{flex:0 0 96px}
+  .bkex-list{display:flex;flex-direction:column;gap:10px;width:100%}
+  .bkex-sec{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,color-mix(in srgb,var(--primary) 10%,var(--background)),transparent);color:var(--primary);font-weight:700;font-size:14px;padding:8px 14px;border-radius:8px;margin:8px 0 2px;border-left:3px solid var(--primary);letter-spacing:.5px}
+  .bkex-sec-bar{width:4px;height:14px;background:var(--primary);border-radius:2px;flex-shrink:0}
+  .bkex-q{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px 12px 12px;transition:all .15s ease}
+  .bkex-q:hover{border-color:color-mix(in srgb,var(--primary) 40%,var(--border));box-shadow:0 2px 8px color-mix(in srgb,#000 6%,transparent)}
+  .bkex-no{flex:0 0 30px;height:30px;background:var(--primary);color:var(--primary-foreground);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;margin-top:1px}
+  .bkex-main{flex:1;min-width:0}
+  .bkex-head{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .bkex-type{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:.5px;line-height:1.5;flex-shrink:0;margin-top:1px}
+  .bkex-type-single{background:color-mix(in srgb,#3b82f6 15%,transparent);color:#1d4ed8}
+  .bkex-type-multi{background:color-mix(in srgb,#a855f7 15%,transparent);color:#7e22ce}
+  .bkex-type-judge{background:color-mix(in srgb,#f59e0b 15%,transparent);color:#b45309}
+  .bkex-type-fill{background:color-mix(in srgb,#64748b 15%,transparent);color:#475569}
+  .bkex-h{flex:1;min-width:0;font-size:14px;line-height:1.75;color:var(--fg);font-weight:500}
+  .bkex-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+  .bkex-opt{display:flex;gap:6px;align-items:flex-start;padding:6px 10px;border:1px solid var(--border);border-radius:7px;background:var(--background);font-size:13.5px;line-height:1.65;transition:all .15s ease;min-width:0}
+  .bkex-opt:hover{border-color:color-mix(in srgb,var(--primary) 50%,var(--border));background:color-mix(in srgb,var(--primary) 4%,var(--background))}
+  .bkex-lt{flex:0 0 20px;height:20px;border-radius:5px;background:var(--muted);color:var(--foreground);font-weight:700;font-size:11.5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .bkex-ot{flex:1;min-width:0;word-break:break-word}
+  .bkex-ans{display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:5px 12px;background:linear-gradient(90deg,color-mix(in srgb,#16a34a 10%,var(--background)),color-mix(in srgb,#16a34a 4%,transparent));border:1px solid color-mix(in srgb,#16a34a 35%,transparent);border-radius:7px;font-size:13px}
+  .bkex-ans-tag{color:#fff;background:#16a34a;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.3px}
+  .bkex-ans-v{color:#15803d;font-weight:800;font-size:14px;letter-spacing:.5px}
+  .bkex-text{padding:8px 12px;color:var(--muted-foreground);font-size:13.5px;line-height:1.7;font-style:italic}
+  @media(max-width:560px){
+    .bkex-q{padding:10px 12px 10px 10px;gap:8px}
+    .bkex-no{flex:0 0 26px;height:26px;font-size:12px}
+    .bkex-opts{grid-template-columns:1fr;gap:5px}
+    .bkex-h{font-size:13.5px}
+    .bkex-opt{font-size:13px;padding:5px 8px}
+    .bkex-ans{padding:4px 10px;font-size:12.5px}
+    .bkex-ans-v{font-size:13px}
+  }
 
   /*FS_HOT_CSS*/
   /* ---- 教材考点：字号可调 + 高频标注 ---- */
@@ -576,7 +607,8 @@ function bookHTML(c){
   }
   var ex='';
   if(c.exercises&&c.exercises.length){
-    ex='<ol class="bkex">'+c.exercises.map(function(q){return '<li>'+esc(q)+'</li>';}).join('')+'</ol>';
+    var parsed=c.exercises.map(parseBkEx).filter(Boolean);
+    ex=renderBkEx(parsed);
   }
   return '<details class="bkch'+(hasHot?' has-hot':'')+'"><summary>'+
     '<span class="bkno">'+c.n+'</span><span class="bkti">'+esc(c.title)+'</span>'+
@@ -587,8 +619,93 @@ function bookHTML(c){
       (mind?'<div class="row"><div class="k">🧭 思维导图</div><div class="v bkmind">'+mind+'</div></div>':'')+
       (secs?'<div class="row"><div class="k">📑 章节结构</div><div class="v"><div class="bksec">'+secs+'</div></div></div>':'')+
       (kp?'<div class="row"><div class="k">📚 本章考点</div><div class="v">'+kp+'</div></div>':'')+
-      (ex?'<div class="row"><div class="k">✍ 思考与练习</div><div class="v">'+ex+'</div></div>':'')+
+      (ex?'<div class="row bkex-row"><div class="k">✍ 思考与练习</div><div class="v">'+ex+'</div></div>':'')+
     '</div></details>';
+}
+
+/* ---- 教材练习题：解析 + 卡片化渲染 ---- */
+function parseBkEx(text){
+  text=String(text||'').trim();
+  if(!text) return null;
+  // 章节小标题（一、单选题 / 二、多项选择题 / 三、判断题 …）
+  if(/^[一二三四五六七八九十]+[、，,]/.test(text) && !/答案/.test(text)){
+    return {type:'sec', title:text};
+  }
+  // 纯文本段（无题号无答案）
+  if(!/^\d+/.test(text) && !/答案/.test(text)){
+    return {type:'text', text:text};
+  }
+  // 题号
+  var nm=text.match(/^(\d+)\s*[\.、．]?\s*/);
+  if(!nm) return {type:'text', text:text};
+  var num=nm[1], body=text.substring(nm[0].length);
+  // 答案（位于末尾，先损耗匹配后验证是否合法）
+  var ans='';
+  var am=body.match(/[，,。\s]*答案\s*[：:=;为]?\s*([^\s]+)\s*$/);
+  if(am){
+    var cand=am[1].trim();
+    if(cand==='正确'||cand==='错误'||/^[A-F]+$/.test(cand)){
+      ans=cand; body=body.substring(0,am.index).trim();
+    }
+  }
+  // 选项字母位置：前后边界 (空格/标点/括号) + 不后接小写字母（防止 Excel/HTML 被误识）
+  var letterRe=/[A-F]/g, pos=[], m;
+  while((m=letterRe.exec(body))!==null){
+    var prev=m.index>0?body.charAt(m.index-1):'';
+    var next=m.index+1<body.length?body.charAt(m.index+1):'';
+    if((m.index===0||/[\s）\)，。：；（\(]/.test(prev)) && !/[A-Za-z]/.test(next)){  // 拒绝 Excel/CPI/API 等缩写中的大写字母
+      pos.push({idx:m.index, letter:m[0]});
+    }
+  }
+  if(!pos.length){
+    var stem=body.replace(/[（\(]\s*[）\)\s]*$/,'').replace(/[（\(]\s*$/,'').trim();
+    return {type:'q', num:num, qtype:'填空', stem:stem, options:[], answer:ans};
+  }
+  // 题干 = 第一个选项之前
+  var stem=body.substring(0, pos[0].idx).trim();
+  stem=stem.replace(/[（\(]\s*$/,'').replace(/[）\)\s]+$/,'').trim();
+  // 选项文本：上一个选项后～下一个选项前
+  var options=[];
+  for(var k=0;k<pos.length;k++){
+    var s=pos[k].idx+1, e=(k+1<pos.length)?pos[k+1].idx:body.length;
+    var t=body.substring(s,e).trim();
+    t=t.replace(/^[\.．：，,。；\)）]\s*/,'').trim();
+    options.push({letter:pos[k].letter, text:t});
+  }
+  // 题型
+  var qtype='';
+  if(ans==='正确'||ans==='错误') qtype='判断';
+  else if(/^[A-F]+$/.test(ans)&&ans.length>1) qtype='多选';
+  else if(/^[A-F]$/.test(ans)) qtype='单选';
+  return {type:'q', num:num, qtype:qtype, stem:stem, options:options, answer:ans};
+}
+function renderBkEx(list){
+  if(!list||!list.length) return '';
+  return '<div class="bkex-list">' + list.map(function(it){
+    if(it.type==='sec'){
+      return '<div class="bkex-sec"><span class="bkex-sec-bar"></span>'+esc(it.title)+'</div>';
+    }
+    if(it.type==='text'){
+      return '<div class="bkex-text">'+esc(it.text)+'</div>';
+    }
+    var typeCls=it.qtype==='判断'?'judge':(it.qtype==='多选'?'multi':(it.qtype==='单选'?'single':'fill'));
+    var tag=it.qtype?'<span class="bkex-type bkex-type-'+typeCls+'">'+esc(it.qtype)+'</span>':'';
+    var optsHTML='';
+    if(it.options.length){
+      optsHTML='<div class="bkex-opts">'+it.options.map(function(o){
+        return '<div class="bkex-opt"><span class="bkex-lt">'+o.letter+'</span><span class="bkex-ot">'+esc(o.text)+'</span></div>';
+      }).join('')+'</div>';
+    }
+    var ansHTML=it.answer?'<div class="bkex-ans"><span class="bkex-ans-tag">✓ 正确答案</span><b class="bkex-ans-v">'+esc(it.answer)+'</b></div>':'';
+    return '<div class="bkex-q">'+
+      '<div class="bkex-no">'+it.num+'</div>'+
+      '<div class="bkex-main">'+
+        '<div class="bkex-head">'+tag+'<div class="bkex-h">'+esc(it.stem)+'</div></div>'+
+        optsHTML+ansHTML+
+      '</div>'+
+    '</div>';
+  }).join('')+'</div>';
+}
 }
 
 
