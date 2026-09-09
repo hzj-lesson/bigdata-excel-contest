@@ -198,16 +198,17 @@ a.anc:hover{text-decoration:underline}
   @media(max-width:560px){.bkfsbar{font-size:11.5px}.bkp li{font-size:calc(var(--bfs,14px) - 1px)}}
 
 
+
 /* ===== LAB_CSS ===== */
 .labbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
 .labbar .tbtn{text-decoration:none;display:inline-block}
 .labdesc{font-size:14px;line-height:1.75;color:var(--muted-foreground)}
 .labdesc b{color:var(--foreground)}
-.labtip{margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--muted);font-size:13px;color:var(--muted-foreground)}
+.labtip{margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--background);background:color-mix(in srgb,var(--primary) 5%,var(--background));border:1px dashed var(--border);font-size:13px;color:var(--muted-foreground)}
 .labfx{padding:14px}
 .labfxrow{display:flex;gap:8px;flex-wrap:wrap}
 .labinput{flex:1;min-width:240px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--background);color:var(--foreground);font-size:14px;font-family:ui-monospace,Menlo,Consolas,monospace}
-.labout{margin-top:10px;padding:12px 14px;border-radius:8px;background:var(--muted);font-size:16px;min-height:44px;display:flex;align-items:center}
+.labout{margin-top:10px;padding:12px 14px;border-radius:8px;min-height:44px;display:flex;align-items:center;background:var(--background);border:1px solid var(--border);background:color-mix(in srgb,var(--primary) 6%,var(--background));border:1px solid color-mix(in srgb,var(--primary) 24%,var(--border))}
 .labval{color:var(--primary);font-size:18px}
 .laberr{color:#d93025;font-size:14px}
 .labok{color:var(--muted-foreground);font-size:13px;margin-right:6px}
@@ -296,6 +297,8 @@ a.anc:hover{text-decoration:underline}
   <div id="book"></div>
 
   
+
+
 
 
   <div class="sec">🛠️ 实操训练台 <small>官方素材 data01 / data03 在线操作 · 可编辑表格 + 公式试验 · 做完直接对答案</small></div>
@@ -903,6 +906,7 @@ function renderRecords(){
 document.getElementById("btnRedo").onclick=redoWrong;
 document.getElementById("btnSync2").onclick=function(){syncModal("menu")};
 document.querySelectorAll(".prac-go").forEach(function(b){b.onclick=function(){startPractice(b.getAttribute("data-p"));};});
+
 
 
 /* ===== LAB_JS ===== */
