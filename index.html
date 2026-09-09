@@ -200,41 +200,82 @@ a.anc:hover{text-decoration:underline}
 
 
 /* ===== LAB_CSS ===== */
-.labbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
-.labbar .tbtn{text-decoration:none;display:inline-block}
-.labdesc{font-size:14px;line-height:1.75;color:var(--muted-foreground)}
+
+/* ---- 容器与工具栏 ---- */
+.labbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0 12px}
+.labbar .tbtn{text-decoration:none;display:inline-block;transition:all .15s ease}
+.labbar .tbtn.on{box-shadow:0 0 0 2px var(--primary);transform:translateY(-1px)}
+
+/* ---- 素材信息卡 ---- */
+.labdesc{font-size:14px;line-height:1.8;color:var(--muted-foreground)}
 .labdesc b{color:var(--foreground)}
-.labtip{margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--background);background:color-mix(in srgb,var(--primary) 5%,var(--background));border:1px dashed var(--border);font-size:13px;color:var(--muted-foreground)}
-.labfx{padding:14px}
-.labfxrow{display:flex;gap:8px;flex-wrap:wrap}
-.labinput{flex:1;min-width:240px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--background);color:var(--foreground);font-size:14px;font-family:ui-monospace,Menlo,Consolas,monospace}
-.labout{margin-top:10px;padding:12px 14px;border-radius:8px;min-height:44px;display:flex;align-items:center;background:var(--background);border:1px solid var(--border);background:color-mix(in srgb,var(--primary) 6%,var(--background));border:1px solid color-mix(in srgb,var(--primary) 24%,var(--border))}
-.labval{color:var(--primary);font-size:18px}
-.laberr{color:#d93025;font-size:14px}
-.labok{color:var(--muted-foreground);font-size:13px;margin-right:6px}
-.labhint{font-size:12px;color:var(--muted-foreground);margin-top:8px;line-height:1.7}
-.labquick{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.labquick>span{font-size:13px;color:var(--muted-foreground)}
-.labtw{overflow:auto;max-height:460px;border:1px solid var(--border);border-radius:10px;background:var(--card);margin-top:12px}
-.labtbl{border-collapse:collapse;font-size:12px;width:100%}
-.labtbl th,.labtbl td{border:1px solid var(--border);padding:4px 8px;white-space:nowrap}
-.labtbl thead th{position:sticky;top:0;background:var(--muted);z-index:2;font-weight:600}
-.labtbl thead tr:nth-child(2) th{top:26px}
-.labhd{color:var(--primary);font-weight:600}
-.labrh{background:var(--muted);color:var(--muted-foreground);text-align:right;font-weight:600;position:sticky;left:0;z-index:1;min-width:44px}
-.labtbl tbody td:focus{outline:2px solid var(--primary);background:var(--background)}
-.labq{margin-top:12px;padding:0}
-.labqh{padding:12px 14px;font-weight:700;border-bottom:1px solid var(--border)}
-.labitem{border-bottom:1px solid var(--border)}
-.labitem summary{padding:12px 14px;cursor:pointer;font-size:14px;line-height:1.7}
+.labtip{margin-top:10px;padding:10px 14px;border-radius:10px;background:color-mix(in srgb,var(--primary) 4%,transparent);border-left:3px solid var(--primary);font-size:13px;color:var(--muted-foreground);line-height:1.7}
+
+/* ---- 公式计算器卡片 ---- */
+.labfx{padding:20px 20px 16px}
+.labfxrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* 输入框：终端风格 */
+.labinput{flex:1;min-width:220px;padding:12px 14px;border:2px solid var(--border);border-radius:10px;background:color-mix(in srgb,var(--foreground) 3%,var(--background));color:var(--foreground);font-size:14px;font-family:ui-monospace,Menlo,Consolas,monospace;transition:border-color .2s,box-shadow .2s}
+.labinput:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 15%,transparent)}
+.labinput::placeholder{color:var(--muted-foreground);opacity:.6}
+
+/* 输出框：结果展示 */
+.labout{margin-top:12px;padding:14px 18px;border-radius:10px;min-height:48px;display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 5%,var(--background)),color-mix(in srgb,var(--primary) 8%,var(--background)));border:1px solid color-mix(in srgb,var(--primary) 18%,var(--border));position:relative;overflow:hidden}
+.labout::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary);border-radius:10px 0 0 10px}
+.labval{color:var(--primary);font-size:20px;font-weight:700;letter-spacing:.3px}
+.laberr{color:#d93025;font-size:14px;font-weight:500}
+.labok{color:var(--muted-foreground);font-size:13px;margin-right:4px}
+.labhint{font-size:12.5px;color:var(--muted-foreground);margin-top:10px;line-height:1.75;opacity:.85}
+
+/* 快捷公式按钮组 */
+.labquick{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.labquick>span{font-size:13px;color:var(--muted-foreground);margin-right:2px}
+.labquick .tbtn{font-size:12px;padding:5px 10px;border-radius:20px;background:var(--muted);border:1px solid transparent;color:var(--foreground);transition:all .15s ease}
+.labquick .tbtn:hover{background:color-mix(in srgb,var(--primary) 12%,var(--background));border-color:var(--primary);color:var(--primary);transform:translateY(-1px)}
+
+/* ---- 数据表格 ---- */
+.labtw{overflow:auto;max-height:480px;border:1px solid var(--border);border-radius:12px;background:var(--card);margin-top:16px;box-shadow:inset 0 1px 3px color-mix(in srgb,#000 6%,transparent)}
+.labtbl{border-collapse:collapse;font-size:12.5px;width:100%;table-layout:fixed}
+.labtbl th,.labtbl td{border:1px solid var(--border);padding:6px 10px;white-space:nowrap;transition:background .15s}
+.labtbl thead th{position:sticky;top:0;background:var(--muted);z-index:2;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted-foreground)}
+.labtbl thead tr:nth-child(2) th{top:34px;background:color-mix(in srgb,var(--primary) 8%,var(--muted))}
+.labhd{color:var(--primary);font-weight:700;font-size:12.5px}
+.labrh{background:var(--muted);color:var(--muted-foreground);text-align:right;font-weight:700;position:sticky;left:0;z-index:1;min-width:48px;font-size:11.5px}
+.labtbl tbody tr:nth-child(even){background:color-mix(in srgb,var(--muted) 30%,transparent)}
+.labtbl tbody tr:hover{background:color-mix(in srgb,var(--primary) 6%,var(--background))}
+.labtbl tbody td:focus{outline:2px solid var(--primary);background:color-mix(in srgb,var(--primary) 8%,var(--background));border-radius:2px}
+
+/* ---- 实操题列表 ---- */
+.labq{margin-top:16px;padding:0}
+.labqh{padding:14px 16px;font-weight:700;font-size:15px;border-bottom:2px solid var(--border);background:color-mix(in srgb,var(--muted) 40%,transparent);border-radius:10px 10px 0 0}
+.labitem{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;transition:box-shadow .2s}
+.labitem:hover{box-shadow:0 2px 8px color-mix(in srgb,#000 8%,transparent)}
+.labitem[open]{box-shadow:0 2px 12px color-mix(in srgb,#000 10%,transparent)}
+.labitem summary{padding:14px 16px;cursor:pointer;font-size:14px;line-height:1.7;list-style:none;display:flex;align-items:center;gap:8px;transition:background .15s}
+.labitem summary::-webkit-details-marker{display:none}
+.labitem summary::before{content:'▸';display:inline-block;font-size:11px;color:var(--primary);transition:transform .2s;flex-shrink:0}
+.labitem[open] summary::before{transform:rotate(90deg)}
 .labitem summary b{color:var(--primary)}
-.labo{padding:0 14px 8px}
-.labopt{padding:6px 10px;border-radius:8px;font-size:14px;margin-bottom:4px;border:1px solid var(--border)}
-.labopt.on{border-color:var(--primary);background:var(--muted)}
-.labtick{color:var(--primary);font-weight:700}
-.labex{padding:0 14px 14px;font-size:13px;line-height:1.85;color:var(--muted-foreground)}
+.labo{padding:0 16px 10px}
+.labopt{padding:8px 12px;border-radius:8px;font-size:14px;margin-bottom:5px;border:1px solid var(--border);transition:all .15s ease;cursor:pointer}
+.labopt:hover{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 5%,var(--background))}
+.labopt.on{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 10%,var(--background));box-shadow:0 0 0 2px color-mix(in srgb,var(--primary) 20%,transparent)}
+.labtick{color:#fff;background:var(--primary);border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-left:6px;vertical-align:middle}
+.labex{padding:10px 16px 14px;font-size:13px;line-height:1.9;color:var(--muted-foreground);background:color-mix(in srgb,var(--muted) 20%,transparent);border-top:1px dashed var(--border)}
 .labex b{color:var(--primary)}
-@media(max-width:560px){.labinput{min-width:100%}.labtw{max-height:360px}}
+
+/* ---- 响应式 ---- */
+@media(max-width:560px){
+  .labinput{min-width:100%}
+  .labtw{max-height:360px}
+  .labtbl{font-size:11.5px}
+  .labtbl th,.labtbl td{padding:5px 6px}
+  .labitem summary{padding:12px;font-size:13px}
+  .labex{padding:8px 12px 12px;font-size:12.5px}
+  .labout{padding:12px 14px}
+  .labval{font-size:17px}
+}
 @media print{.labtw{display:none}.labitem summary{font-weight:600}}
 /* ===== /LAB_CSS ===== */
 </style>
@@ -1114,7 +1155,7 @@ function labQs() {
   var d = labCur(); if (!d) return '';
   var qs = (pr.qs || []).filter(function (q) { return q.ds === d.id; });
   if (!qs.length) return '';
-  return '<div class="card labq"><div class="labqh">📌 本素材对应的官方实操题（' + qs.length + ' 道）</div>' + qs.map(function (q, i) {
+  return '<div class="card labq"><div class="labqh">📌 本素材实操题（' + qs.length + ' 道）· 点击展开看选项与解析</div>' + qs.map(function (q, i) {
     var o = (q.o || []).map(function (t, j) {
       var k = 'ABCDEFG'[j], on = (q.a || '').indexOf(k) >= 0;
       return '<div class="labopt' + (on ? ' on' : '') + '"><b>' + k + '.</b> ' + (t || '（图片选项）') + (on ? ' <span class="labtick">✓</span>' : '') + '</div>';
@@ -1131,17 +1172,17 @@ function labHTML() {
   var h = '';
   h += '<div class="labbar">' + L.map(function (x) {
     return '<button class="tbtn' + (x.id === d.id ? ' on' : '') + '" onclick="labSwitch(\'' + x.id + '\')">' + x.title + '</button>';
-  }).join(' ') + ' <a class="tbtn" href="' + d.url + '" target="_blank" rel="noopener">⬇ 下载 ' + d.file + '（官方原文件）</a></div>';
-  h += '<div class="card labdesc"><b>' + d.file + '</b>　共 ' + d.totalRows + ' 行 × ' + d.headers.length + ' 列<br>' + d.desc +
-    '<div class="labtip">PS：每道题都在原始数据基础上进行，修改不继承；保留小数点后两位、四舍五入。</div></div>';
-  h += '<div class="card labfx"><div class="labfxrow">' +
+  }).join(' ') + ' <a class="tbtn" href="' + d.url + '" target="_blank" rel="noopener" style="border-style:dashed">⬇ 下载 ' + d.file + '</a></div>';
+  h += '<div class="card labdesc"><b style="font-size:15px">📊 ' + d.file + '</b><span style="float:right;color:var(--muted-foreground);font-size:13px">' + d.totalRows + ' 行 × ' + d.headers.length + ' 列</span><div style="margin-top:4px">' + d.desc + '</div>' +
+    '<div class="labtip">⚡ 每道题在原始数据基础上独立操作，修改不继承；结果保留小数点后两位，四舍五入。</div></div>';
+  h += '<div class="card labfx"><div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--muted-foreground)">🔢 公式试验台</div><div class="labfxrow">' +
     '<input id="labFx" class="labinput" type="text" placeholder="输入公式，如 =COUNTA(C:C)　=AVERAGE(D2:D601)　=EOMONTH(A10,0)" value="' + (labState.fx || '').replace(/"/g, '&quot;') + '">' +
-    '<button class="tbtn on" onclick="labRun()">计算</button><button class="tbtn" onclick="labClear()">清空</button></div>' +
-    '<div id="labOut" class="labout">' + (labState.out || '<span class="labhint">在上面输入公式后按「计算」或回车，直接对下方表格求值。</span>') + '</div>' +
-    '<div class="labquick"><span>点一下试试：</span>' +
+    '<button class="tbtn on" onclick="labRun()">▶ 计算</button><button class="tbtn" onclick="labClear()">⊗ 清空</button></div>' +
+    '<div id="labOut" class="labout">' + (labState.out || '<span class="labhint">👆 在上方输入 Excel 公式，按「计算」或回车，直接对下方表格数据求值。</span>') + '</div>' +
+    '<div class="labquick"><span>快捷公式：</span>' +
     ['=COUNTA(C:C)', '=AVERAGE(B:B)', '=ROWS(A:A)', '=COLUMNS(A:A)', '=EOMONTH(A10,0)', '=TEXT(A2,"yyyy-mm-dd")', '=MAX(B:B)', '=COUNTIF(E:E,1)']
       .map(function (f) { return '<button class="tbtn" onclick="labQuick(\'' + f.replace(/"/g, '&quot;') + '\')">' + f + '</button>'; }).join(' ') +
-    '</div><div class="labhint">支持：' + LABFNS.join(' / ') + '　·　单元格可直接双击修改，改完公式会按新数据算。</div></div>';
+    '</div><div class="labhint">支持函数：' + LABFNS.join(' / ') + '　·　单元格可直接双击编辑修改，改完后重新计算即可。</div></div>';
   var g = labState.grid, n = Math.min(labState.shown, g.length);
   h += '<div class="labtw"><table class="labtbl" id="labTbl"><thead><tr><th class="labrh"></th>' +
     d.headers.map(function (x, i) { return '<th>' + labColName(i) + '</th>'; }).join('') +
