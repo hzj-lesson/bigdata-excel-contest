@@ -160,11 +160,7 @@ a.anc:hover{text-decoration:underline}
 
   /* ---- 教材考点：完整知识点 ---- */
   .bkpwrap{margin-top:4px}
-  .bkpsec{margin:10px 0 6px;padding-top:8px;border-top:1px dashed var(--border)}
-  .bkpsec:first-child{border-top:none;padding-top:0;margin-top:2px}
-  .bkph{font-weight:700;color:var(--primary);font-size:13.5px;margin-bottom:4px}
-  .bkp{margin:0;padding-left:20px;list-style:disc}
-  .bkp li{font-size:13px;line-height:1.62;margin:3px 0;color:var(--fg)}
+
   /* 教材练习题 · 卡片化渲染 */
   .bkex-row .k{flex:0 0 96px}
   .bkex-list{display:flex;flex-direction:column;gap:10px;width:100%}
@@ -210,10 +206,19 @@ a.anc:hover{text-decoration:underline}
   .bkfsbar #fsVal{font-size:11.5px;color:var(--primary);min-width:34px;display:inline-block;text-align:center}
   .bkfsbar .bkleg{font-size:11.5px;color:var(--muted)}
   .bkpwrap{margin-top:4px}
-  .bkp{margin:0;padding-left:20px;list-style:disc}
-  .bkp li{font-size:var(--bfs,14px);line-height:1.68;margin:3px 0;color:var(--fg)}
-  .bkex{margin:0;padding-left:20px;list-style:decimal}
-  .bkex li{font-size:calc(var(--bfs,14px) - 1px);line-height:1.68;margin:3px 0;color:var(--fg)}
+  .bkp-list{display:flex;flex-direction:column;gap:6px}
+  .bkp-card{position:relative;background:linear-gradient(135deg,color-mix(in srgb,#fb923c 8%,var(--card)),color-mix(in srgb,#f59e0b 4%,var(--background)));border:1px solid color-mix(in srgb,#f59e0b 28%,var(--border));border-radius:10px;padding:10px 14px 10px 40px;transition:all .15s ease;cursor:default}
+  .bkp-card:hover{box-shadow:0 3px 10px color-mix(in srgb,#f59e0b 20%,transparent);border-color:color-mix(in srgb,#f59e0b 50%,var(--border));transform:translateY(-1px)}
+  .bkp-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;line-height:1}
+  .bkp-card-body{flex:1;min-width:0}
+  .bkp-card-title{font-weight:600;font-size:var(--bfs,14px);line-height:1.7;color:var(--foreground);letter-spacing:.2px}
+  .bkp-sub{padding:4px 8px 4px 24px;font-size:calc(var(--bfs,14px) - 1px);line-height:1.7;color:var(--muted-foreground);position:relative;border-left:2px solid color-mix(in srgb,var(--primary) 18%,transparent);margin-left:14px}
+  .bkp-sub::before{content:'';position:absolute;left:-5px;top:11px;width:8px;height:8px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 18%,transparent)}
+  .bkp-sec{display:flex;align-items:baseline;gap:10px;background:linear-gradient(90deg,color-mix(in srgb,var(--primary) 8%,var(--background)),transparent);border-left:3px solid var(--primary);border-radius:6px;padding:6px 12px;margin:8px 0 2px;font-size:13.5px}
+  .bkp-sec:first-child{margin-top:2px}
+  .bkp-sec-no{color:var(--primary);font-weight:800;letter-spacing:.5px;flex-shrink:0}
+  .bkp-sec-rest{color:var(--muted-foreground);font-weight:500;flex:1;min-width:0;line-height:1.6;font-size:13px}
+  @media(max-width:560px){.bkp-card{padding:9px 12px 9px 36px}.bkp-card-title{font-size:calc(var(--bfs,14px) - 0.5px)}.bkp-sub{font-size:calc(var(--bfs,14px) - 1.5px);padding-left:18px;margin-left:10px}.bkp-icon{font-size:16px;left:10px}}
   /* 高频 / 真题关联 标注 */
   .bktier{font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:8px;margin-left:auto;white-space:nowrap}
   .tier3{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
@@ -221,12 +226,10 @@ a.anc:hover{text-decoration:underline}
   .tier1{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
   .tier0{background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0}
   .tier-1{background:#f8fafc;color:#94a3b8;border:1px solid #e2e8f0}
-  .bkp li.hot{background:linear-gradient(90deg,#fff7ed,#ffedd5);border-radius:7px;padding:2px 8px;margin-left:-8px;box-shadow:inset 3px 0 0 var(--warn)}
-  .bkp li.hot::before{content:"🎯";margin-right:5px}
-  /* 只看高频：隐藏非高频章 + 非真题点 */
+  /* 只看高频：隐藏非高频章 + 辅助说明 */
   #book.hotonly .bkch:not(.has-hot){display:none}
-  #book.hotonly .bkp li:not(.hot){display:none}
-  @media(max-width:560px){.bkfsbar{font-size:11.5px}.bkp li{font-size:calc(var(--bfs,14px) - 1px)}}
+  #book.hotonly .bkp-sub{display:none}
+  #book.hotonly .bkp-sec-rest{display:none}
 
 
 
@@ -598,12 +601,10 @@ function bookHTML(c){
   var hasHot=0;
   var kp='';
   if(c.kp&&c.kp.length){
-    var lis=c.kp[0].points.map(function(p){
-      var t=p.t!==undefined?p.t:p; var hot=p.h?1:0;
-      if(hot)hasHot=1;
-      return '<li'+(hot?' class="hot"':'')+'>'+esc(t)+'</li>';
-    }).join('');
-    kp='<div class="bkpwrap"><ul class="bkp">'+lis+'</ul></div>';
+    var anyHot=0;
+    c.kp[0].points.forEach(function(p){if(p.h)anyHot=1;});
+    if(anyHot)hasHot=1;
+    kp=renderKp(c.kp[0].points);
   }
   var ex='';
   if(c.exercises&&c.exercises.length){
@@ -706,6 +707,31 @@ function renderBkEx(list){
     '</div>';
   }).join('')+'</div>';
 }
+function renderKp(points){
+  if(!points||!points.length) return '';
+  // 检测一、二、三等主标题标记，作为章节分隔条
+  function isSecMark(s){return /^[一-龥]+、/.test(s);}
+  var html='<div class="bkp-list">';
+  points.forEach(function(p){
+    var t=p.t!==undefined?p.t:p; var hot=p.h?1:0;
+    if(isSecMark(t)){
+      // 章节小标题：提取"一、题目"作为标题
+      var mt=t.match(/^([一-龥]+、[^\s，,]+)/);
+      var label=mt?mt[1]:t;
+      var rest=mt?t.substring(mt[0].length).trim():'';
+      html+='<div class="bkp-sec"><span class="bkp-sec-no">'+label+'</span>'+(rest?'<span class="bkp-sec-rest">'+rest+'</span>':'')+'</div>';
+    }else if(hot){
+      // 高频考点卡片
+      html+='<div class="bkp-card"><span class="bkp-icon">⚡</span><div class="bkp-card-body"><div class="bkp-card-title">'+t+'</div></div></div>';
+    }else{
+      // 辅助说明（归属上一个点）
+      html+='<div class="bkp-sub">'+t+'</div>';
+    }
+  });
+  html+='</div>';
+  return html;
+}
+
 
 
 
