@@ -815,6 +815,7 @@ function renderRedo(){
   ov.innerHTML='<div class="card" style="max-width:660px;width:100%;margin-top:18px">'+
     '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>🔁 错题重练 · 第 '+(redoPos+1)+' / '+redoList.length+' 题 · '+(t==="multi"?"多选":(t==="judge"?"判断":"单选"))+'</b><span style="font-size:12.5px;color:var(--muted)">答对即可移出错题本</span></div>'+
     '<div class="qt" style="margin-top:12px;font-weight:700;font-size:15px;line-height:1.8">'+esc(q.q)+'</div>'+
+    chTagHTML(q)+
     '<div class="opts" style="margin-top:10px" id="redoOpts">'+opts+'</div>'+
     '<div id="redoRes" style="margin-top:8px"></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'+
