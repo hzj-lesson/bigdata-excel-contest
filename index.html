@@ -10,6 +10,10 @@
 :root{
   --bg:#f4f7fb; --card:#ffffff; --fg:#1a2333; --muted:#64748b; --border:#e2e8f0;
   --primary:#1d6fe0; --primary-2:#0ea5c6; --primary-fg:#ffffff; --primary-foreground:#ffffff; --muted-foreground:var(--muted);
+  /* 兼容别名：页面历史代码混用过 shadcn 风格变量名，缺定义会让整条 color-mix() 失效 */
+  --background:var(--bg); --foreground:var(--fg); --card-foreground:var(--fg);
+  /* 浅色底专用。--muted 是次要“文字”色(#64748b)，不可拿来当背景，否则深底深字看不见 */
+  --muted-bg:#eef2f7;
   --ok:#16a34a; --warn:#d97706; --soft:#eef4fd; --err:#dc2626;
   --radius:16px; --shadow:0 2px 12px rgba(29,111,224,.08);
 }
@@ -203,7 +207,7 @@ a.anc:hover{text-decoration:underline}
   .bkex-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
   .bkex-opt{display:flex;gap:6px;align-items:flex-start;padding:6px 10px;border:1px solid var(--border);border-radius:7px;background:var(--background);font-size:13.5px;line-height:1.65;transition:all .15s ease;min-width:0}
   .bkex-opt:hover{border-color:color-mix(in srgb,var(--primary) 50%,var(--border));background:color-mix(in srgb,var(--primary) 4%,var(--background))}
-  .bkex-lt{flex:0 0 20px;height:20px;border-radius:5px;background:var(--muted);color:var(--foreground);font-weight:700;font-size:11.5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .bkex-lt{flex:0 0 20px;height:20px;border-radius:5px;background:var(--muted-bg);color:var(--fg);font-weight:700;font-size:11.5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .bkex-ot{flex:1;min-width:0;word-break:break-word}
   .bkex-ans{display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:5px 12px;background:linear-gradient(90deg,color-mix(in srgb,#16a34a 10%,var(--background)),color-mix(in srgb,#16a34a 4%,transparent));border:1px solid color-mix(in srgb,#16a34a 35%,transparent);border-radius:7px;font-size:13px}
   .bkex-ans-tag{color:#fff;background:#16a34a;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.3px}
@@ -288,18 +292,18 @@ a.anc:hover{text-decoration:underline}
 /* 快捷公式按钮组 */
 .labquick{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .labquick>span{font-size:13px;color:var(--muted-foreground);margin-right:2px}
-.labquick .tbtn{font-size:12px;padding:5px 10px;border-radius:20px;background:var(--muted);border:1px solid transparent;color:var(--foreground);transition:all .15s ease}
+.labquick .tbtn{font-size:12px;padding:5px 10px;border-radius:20px;background:var(--muted-bg);border:1px solid transparent;color:var(--primary);transition:all .15s ease}
 .labquick .tbtn:hover{background:color-mix(in srgb,var(--primary) 12%,var(--background));border-color:var(--primary);color:var(--primary);transform:translateY(-1px)}
 
 /* ---- 数据表格 ---- */
 .labtw{overflow:auto;max-height:480px;border:1px solid var(--border);border-radius:12px;background:var(--card);margin-top:16px;box-shadow:inset 0 1px 3px color-mix(in srgb,#000 6%,transparent)}
-.labtbl{border-collapse:collapse;font-size:12.5px;width:100%;table-layout:fixed}
+.labtbl{border-collapse:collapse;font-size:12.5px;width:100%;min-width:840px;table-layout:fixed}
 .labtbl th,.labtbl td{border:1px solid var(--border);padding:6px 10px;white-space:nowrap;transition:background .15s}
-.labtbl thead th{position:sticky;top:0;background:var(--muted);z-index:2;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted-foreground)}
-.labtbl thead tr:nth-child(2) th{top:34px;background:color-mix(in srgb,var(--primary) 8%,var(--muted))}
+.labtbl thead th{position:sticky;top:0;background:var(--muted-bg);z-index:2;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted-foreground)}
+.labtbl thead tr:nth-child(2) th{top:34px;background:color-mix(in srgb,var(--primary) 8%,var(--muted-bg))}
 .labhd{color:var(--primary);font-weight:700;font-size:12.5px}
-.labrh{background:var(--muted);color:var(--muted-foreground);text-align:right;font-weight:700;position:sticky;left:0;z-index:1;min-width:48px;font-size:11.5px}
-.labtbl tbody tr:nth-child(even){background:color-mix(in srgb,var(--muted) 30%,transparent)}
+.labrh{background:var(--muted-bg);color:var(--muted-foreground);text-align:right;font-weight:700;position:sticky;left:0;z-index:1;min-width:48px;font-size:11.5px}
+.labtbl tbody tr:nth-child(even){background:color-mix(in srgb,var(--muted) 16%,transparent)}
 .labtbl tbody tr:hover{background:color-mix(in srgb,var(--primary) 6%,var(--background))}
 .labtbl tbody td:focus{outline:2px solid var(--primary);background:color-mix(in srgb,var(--primary) 8%,var(--background));border-radius:2px}
 
@@ -398,7 +402,7 @@ a.anc:hover{text-decoration:underline}
 
 
 
-  <div class="sec">🛠️ 实操训练台 <small>官方素材 data01 / data03 在线操作 · 可编辑表格 + 公式试验 · 做完直接对答案</small></div>
+  <div class="sec">🛠️ 实操训练台 <small>官方素材 data01 ~ data04 在线操作 · 可编辑表格 + 公式试验 · 做完直接对答案</small></div>
   <div id="lab"></div>
 
 <div class="sec">📑 四套官方模拟题 <small>省赛模拟卷一 ~ 四（官方原卷）· 逐题练习，做一道出一道答案</small></div>
