@@ -94,6 +94,19 @@ details[open]>summary:before{content:"▾ "}
 .chrow{margin-top:7px}
 .chtag{display:inline-block;font-size:11.5px;line-height:1.5;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;border-radius:999px;padding:2px 10px}
 .chtag-lab{background:#fef3c7;color:#b45309;border-color:#fde68a}
+.chst{padding:9px 0;border-bottom:1px dashed var(--border)}
+.chst-h{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13.5px}
+.chst-tag{font-size:11.5px;line-height:1.5;padding:2px 9px;border-radius:999px;border:1px solid var(--border);color:var(--muted);white-space:nowrap}
+.chst-tag.ok{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+.chst-tag.warn{background:#fffbeb;border-color:#fde68a;color:#b45309}
+.chst-tag.bad{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
+.chst-bar{height:6px;background:#eef2f7;border-radius:999px;margin:7px 0 5px;overflow:hidden}
+.chst-bar i{display:block;height:100%;border-radius:999px;background:#cbd5e1}
+.chst-bar i.ok{background:#10b981}
+.chst-bar i.warn{background:#f59e0b}
+.chst-bar i.bad{background:#ef4444}
+.chst-m{font-size:12px;color:var(--muted)}
+.chst-tip{margin-top:10px;padding:9px 12px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:12.5px;line-height:1.6}
 .mini.on{background:#fef2f2;color:var(--err);border-color:#fecaca}
 .ref{font-size:13.5px;color:var(--muted);background:#fff7ed;border-radius:10px;padding:10px 12px;margin-top:6px}
 a.anc{color:var(--primary);text-decoration:none;font-weight:600}
@@ -1076,6 +1089,57 @@ function inlineRedo(qid,pid){
 }
 function closePractice(){var ov=document.getElementById("pracOv");if(ov&&ov.parentNode)ov.parentNode.removeChild(ov);prac=null;renderRecords();}
 
+/* ---------- 按章掌握度统计 ---------- */
+function chStatData(){
+  var map={};
+  function slot(c){ if(!map[c])map[c]={done:0,correct:0,total:0}; return map[c]; }
+  DATA.practices.forEach(function(p){
+    p.qs.forEach(function(q){
+      var c=q.ch||0; if(!c)return;
+      slot(c).total++;
+    });
+  });
+  DATA.practices.forEach(function(p){
+    var r=records[p.id]; if(!r||!r.answers)return;
+    p.qs.forEach(function(q){
+      var c=q.ch||0; if(!c)return;
+      var a=r.answers[q.id]; if(!a)return;
+      var d=slot(c); d.done++; if(a.ok)d.correct++;
+    });
+  });
+  return map;
+}
+function chStatHTML(){
+  var map=chStatData();
+  var rows=DATA.book.map(function(bk,i){
+    var c=i+1, d=map[c]; if(!d||!d.total)return '';
+    var acc=d.done?Math.round(d.correct/d.done*100):0;
+    var cov=Math.round(d.done/d.total*100);
+    var cls='', label='未练';
+    if(d.done){
+      if(acc>=80){cls='ok';label='掌握';}
+      else if(acc>=60){cls='warn';label='待巩固';}
+      else {cls='bad';label='薄弱';}
+    }
+    return '<div class="chst">'+
+      '<div class="chst-h"><b>第 '+c+' 章 · '+esc(bk.title)+'</b><span class="chst-tag '+cls+'">'+label+'</span></div>'+
+      '<div class="chst-bar"><i class="'+cls+'" style="width:'+cov+'%"></i></div>'+
+      '<div class="chst-m">已练 <b>'+d.done+'</b> / '+d.total+'（'+cov+'%）　正确率 '+(d.done?('<b style="color:'+(acc>=80?'var(--ok)':'var(--warn)')+'">'+acc+'%</b>'):'—')+'　答错 '+Math.max(0,d.done-d.correct)+' 题</div>'+
+      '</div>';
+  }).join('');
+  var weak=[], untouched=[];
+  DATA.book.forEach(function(bk,i){
+    var c=i+1, d=map[c]; if(!d||!d.total)return;
+    if(d.done<d.total*0.3)untouched.push(c);
+    else if(Math.round(d.correct/d.done*100)<60)weak.push(c);
+  });
+  var tip='';
+  if(weak.length) tip+='⚠️ 正确率偏低的章节：第 '+weak.join('、')+' 章，建议用「重练错题」重点突破。';
+  if(untouched.length) tip+=(tip?'<br>':'')+'📌 练习量还不足 30% 的章节：第 '+untouched.join('、')+' 章，先把题刷起来再谈掌握度。';
+  if(!tip) tip='👍 各章练习量与正确率都在正常区间，保持节奏即可。';
+  return rows+'<div class="chst-tip">'+tip+'</div>';
+}
+
 /* ---------- 做题记录面板 ---------- */
 function renderRecords(){
   var box=document.getElementById("rec"); if(!box)return;
@@ -1109,6 +1173,7 @@ function renderRecords(){
     '<div>总练习 <b style="font-size:18px;color:var(--primary)">'+overallDone+'</b> 题</div>'+
     '<div>总正确率 <b style="font-size:18px;color:'+(oacc>=80?'var(--ok)':'var(--warn)')+'">'+oacc+'%</b></div>'+
     '</div>'+paperHtml+
+    '<div class="sec" style="margin:14px 0 6px;font-size:15px">📚 按章掌握度 <small>来自逐题练习与模拟卷的作答记录</small></div>'+chStatHTML()+
     '<div class="sec" style="margin:14px 0 6px;font-size:15px">🕑 最近练习</div>'+logHtml;
 }
 
