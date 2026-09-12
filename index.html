@@ -3,8 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Excel 数据分析赛项 · 学习路线（汇总版）</title>
-<meta name="description" content="全国大学生大数据分析技术技能大赛 Excel 数据分析赛项：12 个知识点按备考天数顺序串成一条学习路线，知识点与配套练习放在一起，题目全局去重，不再跳来跳去。">
+<title>Excel 数据分析赛项 · 备考平台（四套官方模拟卷 561 题）</title>
+<meta name="description" content="全国大学生大数据分析技术技能大赛 Excel 数据分析赛项备考平台：四套官方模拟卷 561 题（含 39 道 Excel 实操情境题）、12 个知识点单元、按 16 章教材归类、4 套官方素材在线实操、错题重练与按章掌握度统计。">
+<meta name="keywords" content="大数据分析,Excel 数据分析赛项,省赛,模拟卷,备考,数据透视表,函数,实操题">
+<meta name="author" content="Excel 数据分析赛项备赛平台">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:title" content="Excel 数据分析赛项 · 备考平台（四套官方模拟卷 561 题）">
+<meta property="og:description" content="四套官方模拟卷 561 题 + 12 单元知识点 + 16 章教材归类 + 官方素材在线实操 + 错题重练，省赛 10 月 17 日开考。">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b2a5b">
 <link rel="icon" href="data:,">
 <style>
 :root{
@@ -23,12 +31,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
 .wrap{max-width:960px;margin:0 auto;padding:0 16px 80px}
 .hero{background:linear-gradient(135deg,#0b2a5b 0%,#14468f 45%,#0e7ea8 100%);color:#fff;padding:40px 16px 76px;text-align:center;position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 82% 18%,rgba(14,165,198,.45),transparent 42%),radial-gradient(circle at 12% 85%,rgba(29,111,224,.4),transparent 40%);pointer-events:none}
-.hero h1{font-size:25px;font-weight:800;letter-spacing:1px;position:relative}
+.hero h1{font-size:25px;font-weight:800;letter-spacing:1px;position:relative;text-wrap:balance}
 .hero p{margin-top:10px;font-size:14px;opacity:.92;position:relative}
 .cd{display:inline-flex;gap:10px;margin-top:18px;position:relative}
 .cd .b{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:8px 12px;min-width:54px}
 .cd .n{font-size:22px;font-weight:800;line-height:1}
 .cd .l{font-size:11px;opacity:.85;margin-top:3px}
+@media(max-width:560px){
+  .hero{padding:26px 14px 58px}
+  .hero h1{font-size:18.5px;letter-spacing:.5px}
+  .hero p{font-size:12.5px;margin-top:8px;line-height:1.65}
+  .cd{gap:6px;margin-top:14px}
+  .cd .b{min-width:46px;padding:6px 9px;border-radius:10px}
+  .cd .n{font-size:18px}
+  .cd .l{font-size:10px}
+}
 /* sticky progress */
 .topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.04)}
 .topbar .in{max-width:960px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:12px;font-size:13px}
@@ -164,7 +181,7 @@ a.anc:hover{text-decoration:underline}
 .rec-log{max-height:240px;overflow:auto}
 
   /* ---- 教材考点 ---- */
-  .bkch{border:1px solid var(--border);border-radius:14px;margin:10px 0;background:var(--card);overflow:hidden}
+  .bkch{border:1px solid var(--border);border-radius:14px;margin:10px 0;background:var(--card);overflow:hidden;content-visibility:auto;contain-intrinsic-size:auto 520px}
   .bkch>summary{cursor:pointer;padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14.5px}
   .bkch>summary::-webkit-details-marker{display:none}
   .bkch>summary:hover{background:#f1f5f9;color:var(--primary)}
@@ -337,7 +354,7 @@ a.anc:hover{text-decoration:underline}
   .labout{padding:12px 14px}
   .labval{font-size:17px}
 }
-@media print{.labtw{display:none}.labitem summary{font-weight:600}}
+@media print{.labtw{display:none}.labitem summary{font-weight:600}.bkch{content-visibility:visible;contain-intrinsic-size:auto}}
 /* ===== /LAB_CSS ===== */
 </style>
 </head>
