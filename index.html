@@ -129,6 +129,8 @@ details[open]>summary:before{content:"▾ "}
 .chst-m{font-size:12px;color:var(--muted)}
 .chst-tip{margin-top:10px;padding:9px 12px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:12.5px;line-height:1.6}
 .mini.on{background:#fef2f2;color:var(--err);border-color:#fecaca}
+.mini.fav{background:#fffbeb;color:#b45309;border-color:#fde68a}
+.mini.fav.on{background:#fef3c7;color:#92400e;border-color:#f59e0b}
 .ref{font-size:13.5px;color:var(--muted);background:#fff7ed;border-radius:10px;padding:10px 12px;margin-top:6px}
 a.anc{color:var(--primary);text-decoration:none;font-weight:600}
 a.anc:hover{text-decoration:underline}
@@ -371,6 +373,7 @@ a.anc:hover{text-decoration:underline}
     <span class="bar"><i id="progBar"></i></span>
     <span>已练 <b id="doneQ">0 / 0</b></span>
     <span class="err" id="wrongTxt">错题 0</span>
+    <span id="favTxt" style="font-weight:700;color:#b45309">⭐ 收藏 0</span>
   </div>
 </div>
 
@@ -410,6 +413,9 @@ a.anc:hover{text-decoration:underline}
   <div class="sec">📚 按章节刷题 <small>按《大数据分析素养》章节归类 · 展开章节逐题刷，进度自动保存</small></div>
   <div class="card" style="box-shadow:none" id="book"></div>
 
+  <div class="sec">⭐ 我的收藏 <small>做题时点题边的「⭐ 收藏」· 自动汇总于此，可一键重练</small></div>
+  <div class="card" style="box-shadow:none" id="favBox"></div>
+
   <div class="sec">🛠️ 实操训练台 <small>官方素材 data01 ~ data04 在线操作 · 可编辑表格 + 公式试验 · 做完直接对答案</small></div>
   <div id="lab"></div>
 
@@ -445,6 +451,10 @@ var DATA = /*DATA*/{"units":[],"practices":[{"id":"pr15","title":"省赛模拟�
 var state={}; try{state=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
 var wrong={}; try{wrong=JSON.parse(localStorage.getItem(WKEY))||{}}catch(e){}
 var answered={}; try{answered=JSON.parse(localStorage.getItem(QKEY))||{}}catch(e){}
+/* ---- 题目收藏（做题时点⭐收藏，持久化，按 qid 存储） ---- */
+var FKEY="excel_fav_v1";
+var fav={}; try{fav=JSON.parse(localStorage.getItem(FKEY))||{}}catch(e){}
+function saveFav(){try{localStorage.setItem(FKEY,JSON.stringify(fav));}catch(e){}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));localStorage.setItem(WKEY,JSON.stringify(wrong));localStorage.setItem(QKEY,JSON.stringify(answered));}catch(e){}}
 
 /* ---- 做题记录（逐题练习历史，持久化） ---- */
@@ -578,7 +588,8 @@ function qHTML(q,pid){
     '<div class="opts">'+opts+'</div>'+
     '<div class="qbar">'+submit+'<span class="res '+(g?(rec.ok?"ok":"no"):"")+'">'+resTxt+'</span>'+
     (g?'<button class="mini" onclick="inlineRedo(\''+q.id+'\',\''+pid+'\')">🔄 重做</button>':'')+
-    '<button class="mini '+(wrong[q.id]?"on":"")+'" onclick="toggleWrong(\''+q.id+'\',this)">🔖 '+(wrong[q.id]?"已标记错题":"标记错题")+'</button></div>'+
+    '<button class="mini '+(wrong[q.id]?"on":"")+'" onclick="toggleWrong(\''+q.id+'\',this)">🔖 '+(wrong[q.id]?"已标记错题":"标记错题")+'</button>'+
+    '<button class="mini fav '+(fav[q.id]?"on":"")+'" onclick="toggleFav(\''+q.id+'\',this)">⭐ '+(fav[q.id]?"已收藏":"收藏")+'</button></div>'+
     '<div class="ex">'+esc(q.ex||"")+'</div>'+
   '</div>';
 }
@@ -624,6 +635,45 @@ function toggleWrong(id,btn){
   if(wrong[id])delete wrong[id]; else wrong[id]=1;
   btn.classList.toggle("on"); btn.textContent=wrong[id]?"🔖 已标记错题":"🔖 标记错题";
   save(); refreshWrong();
+}
+/* ---- 题目收藏 ---- */
+function toggleFav(id,btn){
+  if(fav[id])delete fav[id]; else fav[id]=1;
+  if(btn){btn.classList.toggle("on"); btn.innerHTML=fav[id]?"⭐ 已收藏":"⭐ 收藏";}
+  saveFav(); refreshFav();
+  toast(fav[id]?"⭐ 已加入收藏":"已取消收藏");
+}
+function favPanelHTML(){
+  var ids=Object.keys(fav);
+  if(!ids.length)return '<div class="note">还没有收藏。做题时点题边的「⭐ 收藏」，题就会汇总到这里，方便考前集中回顾、一键重练。</div>';
+  var rows=ids.map(function(id){
+    var q=qObj(id); if(!q)return "";
+    var tl=q.type==="multi"?"多选":(q.type==="judge"?"判断":"单选");
+    var head=q.q.length>60?q.q.slice(0,60)+"…":q.q;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--border)">'+
+      '<div style="flex:1;min-width:0"><div style="font-size:13.5px;line-height:1.6"><b>'+tl+'</b> '+esc(head)+'</div>'+
+      '<div style="color:var(--muted);font-size:12px;margin-top:2px">'+(q.ch?("第 "+q.ch+" 章"):"实操专项")+' · '+esc(q.s||"")+'</div></div>'+
+      '<button class="mini" onclick="toggleFav(\''+id+'\',null)" style="flex-shrink:0">移除</button></div>';
+  }).join("");
+  return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">'+
+    '<div style="flex:1">共 <b style="font-size:18px;color:var(--primary)">'+ids.length+'</b> 题</div>'+
+    '<button class="tbtn" id="btnFavRedo" style="border-color:var(--primary);color:var(--primary);font-weight:700">▶ 重练收藏</button>'+
+    '<button class="tbtn" id="btnFavClear">清空收藏</button></div>'+rows;
+}
+function refreshFav(){
+  var n=Object.keys(fav).length;
+  var t=document.getElementById("favTxt"); if(t)t.textContent="⭐ 收藏 "+n;
+  var box=document.getElementById("favBox");
+  if(box){
+    box.innerHTML=favPanelHTML();
+    var r=document.getElementById("btnFavRedo"); if(r)r.onclick=startFav;
+    var c=document.getElementById("btnFavClear");
+    if(c)c.onclick=function(){
+      if(!Object.keys(fav).length)return;
+      if(!confirm("确定清空全部收藏？"))return;
+      fav={}; saveFav(); refreshFav(); toast("已清空收藏");
+    };
+  }
 }
 function toggleUnit(id){var u=document.getElementById(id);u.classList.toggle("open");}
 function toggleDone(id,cb){state[id]=cb.checked;if(!cb.checked)delete state[id];save();refreshProg();toast(cb.checked?"✅ 已标记为完成":"已取消");}
@@ -815,6 +865,7 @@ var _route=document.getElementById("route"); if(_route)_route.innerHTML=DATA.uni
 document.getElementById("prac").innerHTML=DATA.practices.map(pracHTML).join("");
 document.getElementById("tips").innerHTML=tipsHTML();
 if(DATA.book&&document.getElementById("book"))document.getElementById("book").innerHTML=buildBookHTML();
+refreshFav();
 /*FS_HOT_INIT*/
 (function(){
   var book=document.getElementById("book"); if(!book)return;
@@ -921,7 +972,7 @@ function syncModal(mode){
     html='<b>🔄 换设备同步</b><p class="note" style="margin-top:8px">进度只保存在本机浏览器。旧设备生成同步码 → 微信发给「文件传输助手」→ 新设备粘贴导入，学习进度与错题本无缝搬家。</p>'+
       '<div class="toolbar" style="margin-top:12px"><button class="tbtn" id="syncOut">📤 旧设备 · 生成同步码</button><button class="tbtn" id="syncIn">📥 新设备 · 粘贴导入</button><button class="tbtn" id="syncClose">关闭</button></div>';
   }else if(mode==="out"){
-    var code="";try{code=syncEncode({app:"excel-route",v:3,at:new Date().toISOString(),done:state,wrong:wrong,rec:records,ans:answered})}catch(e){}
+    var code="";try{code=syncEncode({app:"excel-route",v:4,at:new Date().toISOString(),done:state,wrong:wrong,rec:records,ans:answered,fav:fav})}catch(e){}
     html='<b>📤 同步码已生成</b><p class="note" style="margin-top:8px">复制下面整段（EC1. 开头）→ 微信发给「文件传输助手」→ 在新设备打开本页 → 「换设备同步」→「粘贴导入」。</p>'+
       '<textarea id="syncTa" readonly style="width:100%;height:110px;margin-top:8px;padding:10px;border:1.5px solid var(--border);border-radius:12px;font-size:11.5px;font-family:monospace;word-break:break-all">'+code+'</textarea>'+
       '<div class="toolbar" style="margin-top:10px"><button class="tbtn" id="syncCopy">📋 复制同步码</button><button class="tbtn" id="syncBack">← 返回</button></div>';
@@ -952,6 +1003,7 @@ function syncModal(mode){
     if(d.wrong)localStorage.setItem(WKEY,JSON.stringify(d.wrong));
     if(d.rec)localStorage.setItem(RKEY,JSON.stringify(d.rec));
     if(d.ans)localStorage.setItem(QKEY,JSON.stringify(d.ans));
+    if(d.fav)localStorage.setItem(FKEY,JSON.stringify(d.fav));
     toast("✅ 同步完成，正在刷新…");setTimeout(function(){location.reload()},600);
   };
 }
@@ -991,6 +1043,25 @@ function startChapter(ch){
   prac={pid:pid,p:p,idx:idx,sel:sel,graded:graded};
   openPractice();
   if(allDone&&doneCnt>0) toast("本章已全部练完（"+doneCnt+"/"+qs.length+"），可从右侧题号重看");
+  else if(doneCnt>0) toast("已跳到第 "+(idx+1)+" 题接着练（已练 "+doneCnt+" 题）");
+}
+/* 重练收藏：把收藏题组成一个虚拟练习卷，复用逐题练习答题器（进度存 records['fav']） */
+function startFav(){
+  var ids=Object.keys(fav);
+  if(!ids.length){ toast("收藏夹是空的——做题时点题边的「⭐ 收藏」吧"); return; }
+  var qs=ids.map(function(id){return qObj(id);}).filter(Boolean);
+  if(!qs.length){ toast("收藏的题似乎已不存在，请清空收藏重试"); return; }
+  var p={id:"fav", title:"⭐ 我的收藏", qs:qs};
+  var r=records["fav"]||{}; var sel={},graded={};
+  for(var k in (r.answers||{})){ sel[k]=r.answers[k].sel; graded[k]=true; }
+  var idx=0, doneCnt=0, allDone=true;
+  for(var i=0;i<qs.length;i++){
+    if(graded[qs[i].id]){doneCnt++; continue;}
+    allDone=false; idx=i; break;
+  }
+  prac={pid:"fav",p:p,idx:idx,sel:sel,graded:graded};
+  openPractice();
+  if(allDone&&doneCnt>0) toast("收藏已全部练完（"+doneCnt+"/"+qs.length+"），可从右侧题号重看");
   else if(doneCnt>0) toast("已跳到第 "+(idx+1)+" 题接着练（已练 "+doneCnt+" 题）");
 }
 
@@ -1069,7 +1140,8 @@ function renderPracticeQ(){
   }
   var submitBtn=(!g&&q.type==="multi")?'<button class="tbtn" id="pracSubmit" style="border-color:var(--primary);color:var(--primary)">提交答案</button>':'';
   document.getElementById("pracQ").innerHTML=
-    '<div class="qhead" style="margin-top:0">'+tlabel+' · 第 '+(prac.idx+1)+' 题 / '+prac.p.qs.length+'</div>'+
+    '<div class="qhead" style="margin-top:0;display:flex;align-items:center;justify-content:space-between;gap:8px"><span>'+tlabel+' · 第 '+(prac.idx+1)+' 题 / '+prac.p.qs.length+'</span>'+
+    '<button class="tbtn" id="pracFav" style="flex-shrink:0">'+(fav[q.id]?"⭐ 已收藏":"⭐ 收藏")+'</button></div>'+
     '<div class="qt" style="font-size:16px;font-weight:600;margin-bottom:12px;line-height:1.7">'+esc(q.q)+'</div>'+
     chTagHTML(q)+
     '<div class="opts">'+opts+'</div>'+resultHtml;
@@ -1080,6 +1152,7 @@ function renderPracticeQ(){
   document.getElementById("pracNext").onclick=function(){if(prac.idx<prac.p.qs.length-1){prac.idx++;renderPracticeQ();}else toast("已是最后一题，可退出查看「做题记录」");};
   var sb=document.getElementById("pracSubmit"); if(sb)sb.onclick=pracGradeMulti;
   var rb=document.getElementById("pracRedo"); if(rb)rb.onclick=pracRedoCurrent;
+  var fb=document.getElementById("pracFav"); if(fb)fb.onclick=function(){toggleFav(q.id,fb);};
   var pos=document.getElementById("pracPos"); if(pos)pos.textContent=" 第 "+(prac.idx+1)+" / "+prac.p.qs.length;
   document.querySelector(".exam-main").scrollTop=0;
   renderPracSide();
@@ -1228,6 +1301,20 @@ function renderRecords(){
       '<div style="text-align:right">已练 <b>'+done+'</b> / '+p.qs.length+'<br><span style="color:'+(acc>=80?'var(--ok)':'var(--warn)')+'">正确率 '+acc+'%</span></div>'+
       '</div>';
   }).join("");
+  // 收藏重练记录（独立进度键 fav，与模拟卷/按章刷题并列）
+  var favRec=records["fav"];
+  if(favRec&&(Object.keys(favRec.answers||{}).length||(favRec.log||[]).length)){
+    var fr=favRec.answers||{},fdone=Object.keys(fr).length,fcorrect=0;
+    for(var fk in fr)if(fr[fk].ok)fcorrect++;
+    overallDone+=fdone;overallCorrect+=fcorrect;
+    var favTotal=Math.max(Object.keys(fav).length,fdone);
+    var facc=fdone?Math.round(fcorrect/fdone*100):0;
+    var flast=favRec.last?new Date(favRec.last).toLocaleString("zh-CN",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}):"—";
+    paperHtml+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border);font-size:13.5px">'+
+      '<div style="flex:1"><b>⭐ 我的收藏</b><div style="color:var(--muted);font-size:12px">最近练习 '+flast+'</div></div>'+
+      '<div style="text-align:right">已练 <b>'+fdone+'</b> / '+favTotal+'<br><span style="color:'+(facc>=80?'var(--ok)':'var(--warn)')+'">正确率 '+facc+'%</span></div>'+
+      '</div>';
+  }
   // 按章刷题记录（与模拟卷并列，独立进度键 chN）
   var chHtml=chapterEntries().map(function(c){
     var r=records[c.pid]||{answers:{},log:[]};
@@ -1247,6 +1334,7 @@ function renderRecords(){
   var allLogs=[];
   DATA.practices.forEach(function(p){ var r=records[p.id]; if(!r||!r.log)return; r.log.forEach(function(e){allLogs.push({pid:p.id,pname:p.title,qid:e.q,ok:e.ok,t:e.t});}); });
   chapterEntries().forEach(function(c){ var r=records[c.pid]; if(!r||!r.log)return; r.log.forEach(function(e){allLogs.push({pid:c.pid,pname:c.title,qid:e.q,ok:e.ok,t:e.t});}); });
+  var favLog=records["fav"]; if(favLog&&favLog.log) favLog.log.forEach(function(e){allLogs.push({pid:"fav",pname:"⭐ 我的收藏",qid:e.q,ok:e.ok,t:e.t});});
   allLogs.sort(function(a,b){return b.t-a.t;}); allLogs=allLogs.slice(0,30);
   var logHtml = allLogs.length? ('<div class="rec-log">'+allLogs.map(function(e){
     var qi=-1;
