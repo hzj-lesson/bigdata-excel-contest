@@ -668,19 +668,24 @@ function makeQItem(it){
 }
 function bookHTML(c){
   var list=qsOfChapter(c.n);
+  var head='<span class="bkno">'+c.n+'</span><b>'+esc(c.title)+'</b><span class="cnt">'+list.length+' 题</span>';
+  if(!list.length) return '<div class="paper"><div class="paper-hd"><div>'+head+'</div></div><div class="note">本章暂无模拟题</div></div>';
   var items=list.map(makeQItem).join('');
-  return '<details class="bkch"><summary>'+
-    '<span class="bkno">'+c.n+'</span><span class="bkti">'+esc(c.title)+'</span>'+
-    (c.part?'<span class="bkpart">'+esc(c.part)+'</span>':'')+
-    '<span class="bktier">'+list.length+' 题</span></summary>'+
-    '<div class="bkbody">'+(items||'<div class="note">本章暂无模拟题</div>')+'</div></details>';
+  return '<div class="paper">'+
+    '<div class="paper-hd"><div>'+head+'</div>'+
+    '<button class="tbtn bk-go" onclick="startChapter('+c.n+')" style="border-color:var(--primary);color:var(--primary);font-weight:700">📝 开始练习</button></div>'+
+    '<details><summary>展开 / 收起全部题目（也可点「开始练习」逐题做）</summary><div class="dbox" style="padding:14px 16px">'+items+'</div></details>'+
+  '</div>';
 }
 function buildBookHTML(){
   var html=DATA.book.map(bookHTML).join('');
   var lab=qsOfChapter(0);
   if(lab.length){
     var items=lab.map(makeQItem).join('');
-    html+='<details class="bkch"><summary><span class="bkno">练</span><span class="bkti">实操专项</span><span class="bktier">'+lab.length+' 题</span></summary><div class="bkbody">'+items+'</div></details>';
+    var head='<span class="bkno">练</span><b>实操专项</b><span class="cnt">'+lab.length+' 题</span>';
+    html+='<div class="paper"><div class="paper-hd"><div>'+head+'</div>'+
+      '<button class="tbtn bk-go" onclick="startChapter(0)" style="border-color:var(--primary);color:var(--primary);font-weight:700">📝 开始练习</button></div>'+
+      '<details><summary>展开 / 收起全部题目</summary><div class="dbox" style="padding:14px 16px">'+items+'</div></details></div>';
   }
   return html;
 }
@@ -963,6 +968,26 @@ function startPractice(pid){
   if(allDone&&doneCnt>0) toast("本卷已全部练完（"+doneCnt+"/"+p.qs.length+"），可从右侧题号重看");
   else if(doneCnt>0) toast("已跳到第 "+(idx+1)+" 题接着练（已练 "+doneCnt+" 题）");
 }
+function startChapter(ch){
+  var title=(ch===0)?'实操专项':('第 '+ch+' 章 · '+(DATA.book&&DATA.book[ch-1]?DATA.book[ch-1].title:('第'+ch+'章')));
+  var items=qsOfChapter(ch);
+  if(!items.length){ toast('本章暂无模拟题'); return; }
+  var qs=items.map(function(it){return it.q;});   // 取出原始题目对象，复用同一套答题器
+  var pid='ch'+ch;                                 // 独立进度 key，不与模拟卷混淆
+  var p={id:pid, title:title, qs:qs};
+  var r=records[pid]||{}; var sel={},graded={};
+  for(var k in (r.answers||{})){ sel[k]=r.answers[k].sel; graded[k]=true; }
+  var idx=0, doneCnt=0, allDone=true;
+  for(var i=0;i<qs.length;i++){
+    if(graded[qs[i].id]){doneCnt++; continue;}
+    allDone=false; idx=i; break;
+  }
+  prac={pid:pid,p:p,idx:idx,sel:sel,graded:graded};
+  openPractice();
+  if(allDone&&doneCnt>0) toast("本章已全部练完（"+doneCnt+"/"+qs.length+"），可从右侧题号重看");
+  else if(doneCnt>0) toast("已跳到第 "+(idx+1)+" 题接着练（已练 "+doneCnt+" 题）");
+}
+
 function openPractice(){
   var ov=document.getElementById("pracOv"); if(ov)ov.parentNode.removeChild(ov);
   ov=document.createElement("div"); ov.id="pracOv"; ov.className="exam";
