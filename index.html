@@ -705,12 +705,17 @@ function tipsHTML(){
 /* ---- boot ---- */
 
 function qsOfChapter(ch){
-  var out=[];
+  var out=[],seen={};
   DATA.practices.forEach(function(p){
     p.qs.forEach(function(q){
       var isLab = q.id && String(q.id).indexOf('p18')===0;
-      if(ch===0){ if(isLab || !q.ch) out.push({q:q,pid:p.id}); }
-      else if(q.ch===ch) out.push({q:q,pid:p.id});
+      var hit=(ch===0)?(isLab || !q.ch):(q.ch===ch);
+      if(!hit) return;
+      /* 跨卷重复题（题干相同、仅空格/全半角括号差异）只保留卷列表中靠前的一份，避免按章练习重复出现 */
+      var key=String(q.q||"").replace(/[\s\u3000]+/g,"").replace(/[（(【\[{]/g,"(").replace(/[）)】\]}]/g,")").replace(/[。\.，,、;；:：]+$/,"");
+      if(seen[key]) return;
+      seen[key]=1;
+      out.push({q:q,pid:p.id});
     });
   });
   return out;
