@@ -413,6 +413,9 @@ a.anc:hover{text-decoration:underline}
   <div class="sec">📚 按章节刷题 <small>按《大数据分析素养》章节归类 · 展开章节逐题刷，进度自动保存</small></div>
   <div class="card" style="box-shadow:none" id="book"></div>
 
+  <div class="sec">❌ 我的错题 <small>答错的题自动汇总 · 按章节归类 · 做对一道自动移除一道</small></div>
+  <div class="card" style="box-shadow:none" id="wrongBook"></div>
+
   <div class="sec">⭐ 我的收藏 <small>做题时点题边的「⭐ 收藏」· 自动汇总于此，可一键重练</small></div>
   <div class="card" style="box-shadow:none" id="favBox"></div>
 
@@ -580,14 +583,14 @@ function qHTML(q,pid){
     var lkcls = jt ? ("lk jdg "+(o==="正确"?"ok":"no")) : "lk";
     return '<div class="'+cls+'" data-i="'+i+'"'+(g?'':' onclick="pick(this,\''+q.id+'\')"')+'><span class="'+lkcls+'">'+lk+'</span><span>'+esc(o)+'</span></div>';
   }).join("");
-  var submit = (multi&&!g)?'<button class="mini" onclick="gradeMulti(\''+q.id+'\')">提交答案</button>':'';
+  var submit = (multi&&!g)?'<button class="mini" onclick="gradeMulti(\''+q.id+'\',this)">提交答案</button>':'';
   var resTxt = g?(rec.ok?"✅ 答对了":"❌ 答错了"):"";
   return '<div class="q'+(g?" done":"")+'" id="q-'+q.id+'">'+
     '<div class="qt">'+esc(q.q)+'</div>'+
     chTagHTML(q)+
     '<div class="opts">'+opts+'</div>'+
     '<div class="qbar">'+submit+'<span class="res '+(g?(rec.ok?"ok":"no"):"")+'">'+resTxt+'</span>'+
-    (g?'<button class="mini" onclick="inlineRedo(\''+q.id+'\',\''+pid+'\')">🔄 重做</button>':'')+
+    (g?'<button class="mini" onclick="inlineRedo(\''+q.id+'\',\''+pid+'\',this)">🔄 重做</button>':'')+
     '<button class="mini '+(wrong[q.id]?"on":"")+'" onclick="toggleWrong(\''+q.id+'\',this)">🔖 '+(wrong[q.id]?"已标记错题":"标记错题")+'</button>'+
     '<button class="mini fav '+(fav[q.id]?"on":"")+'" onclick="toggleFav(\''+q.id+'\',this)">⭐ '+(fav[q.id]?"已收藏":"收藏")+'</button></div>'+
     '<div class="ex">'+esc(q.ex||"")+'</div>'+
@@ -611,14 +614,15 @@ function pick(el,id){
   box.classList.add("done");
   commitAnswer(id,idx,ok);
   var res=box.querySelector(".res"); res.textContent=ok?"✅ 答对了":"❌ 答错了"; res.className="res "+(ok?"ok":"no");
-  // 就地重渲染本题：带出持久化状态与「🔄 重做」按钮
-  var wrap=document.getElementById("q-"+id);
+  // 就地重渲染本题：带出持久化状态与「🔄 重做」按钮。
+  // 注意用 closest 定位用户实际操作的这个实例——同一道题会在多个板块各渲染一份，getElementById 会取错
+  var wrap=box;
   if(wrap) wrap.outerHTML=qHTML(q,qPidOf(id));
 }
-function gradeMulti(id){
+function gradeMulti(id,btn){
   var q=qObj(id); if(!q)return;
-  var box=document.getElementById("q-"+id);
-  if(box.classList.contains("done"))return;
+  var box=btn?btn.closest(".q"):document.getElementById("q-"+id);
+  if(!box||box.classList.contains("done"))return;
   var sel=[]; box.querySelectorAll(".opt.sel").forEach(function(o){sel.push(+o.dataset.i);});
   var correct=[]; q.o.forEach(function(o,i){if(isAns(q,i))correct.push(i);});
   var right = sel.length===correct.length && sel.every(function(i){return correct.indexOf(i)>=0;});
@@ -628,7 +632,7 @@ function gradeMulti(id){
   box.classList.add("done");
   commitAnswer(id,sel,right);
   var res=box.querySelector(".res"); res.textContent=right?"✅ 全部选对":"❌ 有漏选或错选"; res.className="res "+(right?"ok":"no");
-  var wrap=document.getElementById("q-"+id);
+  var wrap=box;
   if(wrap) wrap.outerHTML=qHTML(q,qPidOf(id));
 }
 function toggleWrong(id,btn){
@@ -686,7 +690,63 @@ function refreshProg(){
   var qdone=0; for(var k in answered) if(answered[k]) qdone++;
   var dq=document.getElementById("doneQ"); if(dq) dq.textContent=qdone+" / "+qtotal;
 }
-function refreshWrong(){document.getElementById("wrongTxt").textContent="错题 "+Object.keys(wrong).length;}
+function refreshWrong(){
+  document.getElementById("wrongTxt").textContent="错题 "+Object.keys(wrong).length;
+  var box=document.getElementById("wrongBook"); if(!box)return;
+  // 重渲染前记住各卡片展开状态（按 data-w 键），渲染后恢复，避免答题时展开的章节被折叠
+  var opened={};
+  box.querySelectorAll("details[open]").forEach(function(d){ opened[d.getAttribute("data-w")]=1; });
+  box.innerHTML=wrongBookHTML();
+  box.querySelectorAll("details").forEach(function(d){
+    if(opened[d.getAttribute("data-w")])d.open=true;
+  });
+}
+
+/* ---- 错题本板块：全部错题总卡片 + 按章节分组卡片，风格与「按章节刷题」一致 ---- */
+function chTitle(ch){
+  if(!ch) return "🔧 实操专项";
+  if(DATA.book){ for(var i=0;i<DATA.book.length;i++) if(DATA.book[i].n===ch) return "第 "+ch+" 章 · "+DATA.book[i].title; }
+  return "第 "+ch+" 章";
+}
+/* ch=null 取全部错题；否则取该章错题（ch=0 表示实操/无章节归属的题） */
+function wrongQs(ch){
+  var out=[];
+  for(var id in wrong){
+    var q=qObj(id); if(!q)continue;
+    var c=q.ch||0;
+    if(ch===null||c===ch) out.push(q);
+  }
+  return out;
+}
+function wrongPaperHTML(ch,title,qs){
+  var items=qs.map(function(q){return makeQItem({q:q,pid:qPidOf(q.id)});}).join("");
+  var go=ch===null?"startWrong(null)":"startWrong("+ch+")";
+  return '<div class="paper">'+
+    '<div class="paper-hd"><div><b>'+esc(title)+'</b><span class="cnt">'+qs.length+' 题</span></div>'+
+    '<button class="tbtn" onclick="'+go+'" style="border-color:var(--err);color:var(--err);font-weight:700">📝 开始练习</button></div>'+
+    '<details data-w="'+(ch===null?"all":ch)+'"><summary>展开 / 收起全部题目（也可点「开始练习」逐题做 · 答对即移除）</summary><div class="dbox" style="padding:14px 16px">'+items+'</div></details>'+
+  '</div>';
+}
+function wrongBookHTML(){
+  var all=wrongQs(null);
+  if(!all.length) return '<div class="note">错题本是空的。做题时答错的题会自动汇总到这里，也可以点题边的「🔖 标记错题」手动加入；之后做对一道，就自动移除一道。</div>';
+  var groups={};
+  all.forEach(function(q){ var c=q.ch||0; (groups[c]=groups[c]||[]).push(q); });
+  var chs=Object.keys(groups).map(Number).sort(function(a,b){return a-b;});
+  var html=wrongPaperHTML(null,"❌ 全部错题",all);
+  chs.forEach(function(c){ html+=wrongPaperHTML(c,chTitle(c),groups[c]); });
+  return html;
+}
+/* 错题练习：复用逐题练习器。commitAnswerPid 已内置「答对移出错题本、答错保留」逻辑 */
+function startWrong(ch){
+  var qs=wrongQs(ch);
+  if(!qs.length){ toast(ch===null?"错题本是空的，先去刷几道题吧":"这一章暂时没有错题"); return; }
+  var pid=ch===null?"wrong":("wch"+ch);
+  var title=ch===null?"❌ 全部错题":("❌ 错题 · "+chTitle(ch));
+  prac={pid:pid,p:{id:pid,title:title,qs:qs},idx:0,sel:{},graded:{}};
+  openPractice();
+  toast("共 "+qs.length+" 道错题 · 答对即自动移除");
+}
 
 /* ---- render practices ---- */
 function pracHTML(p){
@@ -1118,6 +1178,8 @@ function pracCommit(q){
   prac.graded[q.id]=true;
   commitAnswerPid(prac.pid, q.id, sel, ok);
   renderPracticeQ();
+  // 错题练习中答对：commitAnswerPid 已将其移出错题本，这里给个明确反馈
+  if(ok&&(prac.pid==="wrong"||prac.pid.indexOf("wch")===0)&&!wrong[q.id]) toast("✅ 答对了，已移出错题本");
 }
 function renderPracticeQ(){
   var q=prac.p.qs[prac.idx];
@@ -1207,12 +1269,12 @@ function pracRedoCurrent(){
   toast("已重置本题 · 重新作答后按新结果计入记录");
 }
 /* 展开区直接点的题，同样支持单题重做（局部替换该题 DOM，不影响折叠状态） */
-function inlineRedo(qid,pid){
+function inlineRedo(qid,pid,btn){
   var r=records[pid];
   if(r&&r.answers&&r.answers[qid]){ delete r.answers[qid]; saveRec(); }
   delete answered[qid];
   save(); refreshProg(); renderRecords();
-  var q=qObj(qid), wrap=document.getElementById("q-"+qid);
+  var q=qObj(qid), wrap=btn?btn.closest(".q"):document.getElementById("q-"+qid);
   if(wrap&&q) wrap.outerHTML=qHTML(q,pid);
   toast("已重置本题 · 可重新作答");
 }
@@ -1360,7 +1422,7 @@ function renderRecords(){
 }
 
 /* ---------- 绑定 ---------- */
-document.getElementById("btnRedo").onclick=redoWrong;
+document.getElementById("btnRedo").onclick=function(){startWrong(null);};
 document.getElementById("btnSync2").onclick=function(){syncModal("menu")};
 document.querySelectorAll(".prac-go").forEach(function(b){b.onclick=function(){startPractice(b.getAttribute("data-p"));};});
 
