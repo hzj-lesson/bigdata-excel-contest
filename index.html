@@ -737,15 +737,32 @@ function wrongBookHTML(){
   chs.forEach(function(c){ html+=wrongPaperHTML(c,chTitle(c),groups[c]); });
   return html;
 }
-/* 错题练习：复用逐题练习器。commitAnswerPid 已内置「答对移出错题本、答错保留」逻辑 */
+/* 错题练习：复用逐题练习器。commitAnswerPid 已内置「答对移出错题本、答错保留」逻辑。
+   进度持久化：刷新后重进会恢复到上次的判分状态（答对已移除的题不再出现，答错的题保留 ❌ 记录），
+   并自动跳到第一道还没练的题，实现「接着练」 */
 function startWrong(ch){
   var qs=wrongQs(ch);
   if(!qs.length){ toast(ch===null?"错题本是空的，先去刷几道题吧":"这一章暂时没有错题"); return; }
   var pid=ch===null?"wrong":("wch"+ch);
   var title=ch===null?"❌ 全部错题":("❌ 错题 · "+chTitle(ch));
-  prac={pid:pid,p:{id:pid,title:title,qs:qs},idx:0,sel:{},graded:{}};
+  // 从 records 恢复进度：只恢复仍在错题本里的题（答对已移除的不再出现）
+  var r=records[pid]||{}, sel={}, graded={};
+  for(var k in (r.answers||{})){
+    if(!wrong[k]) continue;
+    var inList=false; for(var i=0;i<qs.length;i++) if(qs[i].id===k){ inList=true; break; }
+    if(inList){ sel[k]=r.answers[k].sel; graded[k]=true; }
+  }
+  var idx=-1, doneCnt=0;
+  for(var j=0;j<qs.length;j++){
+    if(graded[qs[j].id]){ doneCnt++; }
+    else if(idx<0){ idx=j; }
+  }
+  if(idx<0) idx=0;   // 全部练完时回到第一题（可回看判分与解析）
+  prac={pid:pid,p:{id:pid,title:title,qs:qs},idx:idx,sel:sel,graded:graded};
   openPractice();
-  toast("共 "+qs.length+" 道错题 · 答对即自动移除");
+  if(doneCnt>0&&doneCnt<qs.length) toast("已跳到第 "+(idx+1)+" 题接着练（本轮已练 "+doneCnt+" / "+qs.length+" 题）");
+  else if(doneCnt>=qs.length&&doneCnt>0) toast("错题已全部练过（" + doneCnt + " 题）· 回到第一题可回看解析");
+  else toast("共 "+qs.length+" 道错题 · 答对即自动移除");
 }
 
 /* ---- render practices ---- */
@@ -1382,6 +1399,25 @@ function renderRecords(){
       '<div style="text-align:right">已练 <b>'+fdone+'</b> / '+favTotal+'<br><span style="color:'+(facc>=80?'var(--ok)':'var(--warn)')+'">正确率 '+facc+'%</span></div>'+
       '</div>';
   }
+  // 错题练习记录（独立进度键 wrong / wchN：全部错题 + 按章错题；答对即移除，答错留下）
+  var wrongPids=["wrong"];
+  Object.keys(records).forEach(function(pid){ if(pid.indexOf("wch")===0) wrongPids.push(pid); });
+  var wrongHtml=wrongPids.map(function(pid){
+    var r=records[pid]; if(!r||!Object.keys(r.answers||{}).length)return "";
+    var n=(pid==="wrong")?null:+pid.slice(3);
+    var name=(pid==="wrong")?"❌ 全部错题":("❌ 错题 · "+chTitle(n));
+    var ans=r.answers||{}, done=Object.keys(ans).length, correct=0;
+    for(var k in ans)if(ans[k].ok)correct++;
+    overallDone+=done;overallCorrect+=correct;
+    var cur=wrongQs(n).length;   // 当前错题本里该范围还剩多少题
+    var acc=done?Math.round(correct/done*100):0;
+    var last=r.last?new Date(r.last).toLocaleString("zh-CN",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}):"—";
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border);font-size:13.5px">'+
+      '<div style="flex:1"><b>'+esc(name)+'</b><div style="color:var(--muted);font-size:12px">最近练习 '+last+' · 当前还剩 <b style="color:var(--err)">'+cur+'</b> 题</div></div>'+
+      '<div style="text-align:right">已练 <b>'+done+'</b> 题（答对移除 '+correct+'）<br><span style="color:'+(acc>=80?'var(--ok)':'var(--warn)')+'">正确率 '+acc+'%</span></div>'+
+      '</div>';
+  }).join("");
+  if(wrongHtml) wrongHtml='<div class="sec" style="margin:14px 0 6px;font-size:15px">❌ 错题练习记录 <small>答对自动移除 · 答错留下继续练</small></div>'+wrongHtml;
   // 按章刷题记录（与模拟卷并列，独立进度键 chN）
   var chHtml=chapterEntries().map(function(c){
     var r=records[c.pid]||{answers:{},log:[]};
@@ -1397,11 +1433,12 @@ function renderRecords(){
       '</div>';
   }).join("");
   if(chHtml) chHtml='<div class="sec" style="margin:14px 0 6px;font-size:15px">📚 按章节刷题记录 <small>逐章作答进度</small></div>'+chHtml;
-  var recordsHtml=paperHtml+chHtml;
+  var recordsHtml=paperHtml+wrongHtml+chHtml;
   var allLogs=[];
   DATA.practices.forEach(function(p){ var r=records[p.id]; if(!r||!r.log)return; r.log.forEach(function(e){allLogs.push({pid:p.id,pname:p.title,qid:e.q,ok:e.ok,t:e.t});}); });
   chapterEntries().forEach(function(c){ var r=records[c.pid]; if(!r||!r.log)return; r.log.forEach(function(e){allLogs.push({pid:c.pid,pname:c.title,qid:e.q,ok:e.ok,t:e.t});}); });
   var favLog=records["fav"]; if(favLog&&favLog.log) favLog.log.forEach(function(e){allLogs.push({pid:"fav",pname:"⭐ 我的收藏",qid:e.q,ok:e.ok,t:e.t});});
+  wrongPids.forEach(function(pid){ var r=records[pid]; if(!r||!r.log)return; var nm=(pid==="wrong")?"❌ 全部错题":("❌ 错题 · "+chTitle(+pid.slice(3))); r.log.forEach(function(e){allLogs.push({pid:pid,pname:nm,qid:e.q,ok:e.ok,t:e.t});}); });
   allLogs.sort(function(a,b){return b.t-a.t;}); allLogs=allLogs.slice(0,30);
   var logHtml = allLogs.length? ('<div class="rec-log">'+allLogs.map(function(e){
     var qi=-1;
