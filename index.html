@@ -744,8 +744,13 @@ function wrongBookHTML(){
   return html;
 }
 /* 错题练习：复用逐题练习器。commitAnswerPid 已内置「答对移出错题本、答错保留」逻辑。
-   进度持久化：刷新后重进会恢复到上次的判分状态（答对已移除的题不再出现，答错的题保留 ❌ 记录），
-   并自动跳到第一道还没练的题，实现「接着练」 */
+   答题节奏（用户 2026-10-20 要求）：
+   ① 进入错题练习时干净呈现——不回退显示既往答错记录，也不预先显示正确答案/解析；
+   ② 第 1 次答错：不标红、不公布答案，选项保持可改选，让你再想一次；
+   ③ 第 2 次（再错一次）才正式判分：错选标红 + 给出正确答案与解析；
+   ④ 答对：自动移出错题本（沿用原有逻辑）。
+   注：旧的 redoWrong/renderRedo（下方）已无入口调用，属遗留代码，本次不动。 */
+function isWrongPrac(){ return !!(prac && (prac.pid==="wrong" || prac.pid.indexOf("wch")===0)); }
 function startWrong(ch){
   var qs=wrongQs(ch);
   if(!qs.length){ toast(ch===null?"错题本是空的，先去刷几道题吧":"这一章暂时没有错题"); return; }
@@ -778,11 +783,13 @@ function startWrong(ch){
     else if(idx<0){ idx=j; }
   }
   if(idx<0) idx=0;   // 全部练完时回到第一题（可回看判分与解析）
-  prac={pid:pid,p:{id:pid,title:title,qs:qs},idx:idx,sel:sel,graded:graded};
+  /* 关键改动：graded 传空对象 → 进入时不显示任何判分颜色、不显示正确答案与解析；
+     sel 也置空 → 不预填上次的选择，从头作答。
+     tryN 记录每题在本次错题练习中的答错次数（第 2 次才标红）。 */
+  prac={pid:pid,p:{id:pid,title:title,qs:qs},idx:idx,sel:{},graded:{},tryN:{}};
   openPractice();
-  if(doneCnt>0&&doneCnt<qs.length) toast("已恢复 "+doneCnt+" 题的答错记录 · 已跳到第 "+(idx+1)+" 题接着练");
-  else if(doneCnt>=qs.length&&doneCnt>0) toast("已恢复全部 "+doneCnt+" 题的答错记录 · 可回看解析 · 重做请点「重做本题」");
-  else toast("共 "+qs.length+" 道错题 · 答对即自动移除");
+  if(doneCnt>0&&doneCnt<qs.length) toast("共 "+qs.length+" 道错题 · 已跳到第 "+(idx+1)+" 题 · 头次答错不标红");
+  else toast("共 "+qs.length+" 道错题 · 答对自动移出错题本 · 头次答错不标红，再错才标红");
 }
 
 /* ---- render practices ---- */
@@ -1212,6 +1219,16 @@ function pracGradeMulti(){
 function pracCommit(q){
   var sel=prac.sel[q.id];
   var ok=pracCompute(q,sel);
+  /* 错题练习渐进提示：第 1 次答错——不标红、不公布答案，保留选项可改选再试；
+     第 2 次（再错一次）才正式判分：错选标红 + 显示正确答案与解析。 */
+  if(!ok && isWrongPrac()){
+    prac.tryN=prac.tryN||{};
+    prac.tryN[q.id]=(prac.tryN[q.id]||0)+1;
+    if(prac.tryN[q.id]<2){
+      renderPracticeQ();   // prac.graded 仍为 false → 不标红不标绿，选项仍可点击改选
+      return;
+    }
+  }
   prac.graded[q.id]=true;
   commitAnswerPid(prac.pid, q.id, sel, ok);
   renderPracticeQ();
@@ -1244,6 +1261,9 @@ function renderPracticeQ(){
     var ok=pracCompute(q,sel);
     resultHtml='<div class="note" style="border:1px solid '+(ok?'var(--ok)':'var(--err)')+';color:'+(ok?'#15803d':'#b91c1c')+';margin-top:10px">'+(ok?'✅ 答对了':'❌ 答错了 · 正确答案 '+ci.map(optLetter).join("、"))+'</div>'+
       '<div class="ex" style="display:block;margin-top:8px">'+esc(q.ex||"")+'</div>';
+  }else if(isWrongPrac()&&prac.tryN&&prac.tryN[q.id]===1){
+    /* 第 1 次答错：只提示再试一次，不标红、不公布答案 */
+    resultHtml='<div class="note" style="border:1px dashed var(--warn);color:#b45309;margin-top:10px">💡 答错了 —— 先不告诉你答案，换个选项再试一次。第 2 次答错才会标红并给出答案。</div>';
   }
   var submitBtn=(!g&&q.type==="multi")?'<button class="tbtn" id="pracSubmit" style="border-color:var(--primary);color:var(--primary)">提交答案</button>':'';
   document.getElementById("pracQ").innerHTML=
