@@ -496,13 +496,19 @@ function commitAnswerPid(pid,qid,sel,ok){
 }
 /* 错题重练结果回写到做题记录，避免「重练答对了但记录仍记为错」 */
 function recSyncFromRedo(qid,ok){
-  var pid=qPidOf(qid); if(!pid)return;
-  var r=records[pid];
-  if(!r||!r.answers||!r.answers[qid])return;
-  r.answers[qid].ok=ok;
-  r.last=Date.now();
-  r.log.unshift({q:qid,ok:ok,t:Date.now()});
-  if(r.log.length>60)r.log.length=60;
+  /* 同一道题可能同时在按章刷题(chN)/模拟卷(prX)/收藏(fav)等多个练习里留有记录，
+     全部同步 ok，避免「重练答对了但别的练习里仍记为错」导致显示不一致 */
+  var primary=qPidOf(qid);
+  for(var rk in records){
+    var r=records[rk];
+    if(!r||!r.answers||!r.answers[qid])continue;
+    r.answers[qid].ok=ok;
+    if(rk===primary){
+      r.last=Date.now();
+      r.log.unshift({q:qid,ok:ok,t:Date.now()});
+      if(r.log.length>60)r.log.length=60;
+    }
+  }
   saveRec();
 }
 function esc(s){return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
@@ -752,6 +758,20 @@ function startWrong(ch){
     var inList=false; for(var i=0;i<qs.length;i++) if(qs[i].id===k){ inList=true; break; }
     if(inList){ sel[k]=r.answers[k].sel; graded[k]=true; }
   }
+  /* 错题本里的题大多是早先在按章刷题/模拟卷/收藏练习里答错才汇总进来的——那份答错记录
+     存在各练习自己的 records 里。这里回退恢复：只要某题曾在任何练习里答错过，
+     重新点进错题练习就显示当时的判分（你选了什么/正确答案/解析），不用重新选。
+     重做请点题下方的「🔄 重做本题」；重做后答对即自动移出错题本。 */
+  var _resetAt=(records[pid]||{}).resetAt||0;   // 重置过本卷则不回退显示重置前的旧记录
+  for(var qi=0;qi<qs.length;qi++){
+    var q0=qs[qi]; if(graded[q0.id]) continue;
+    for(var rk in records){
+      if(rk===pid) continue;   // 错题练习自身的记录已在上面优先恢复
+      var r2=records[rk];
+      var a2=r2&&r2.answers&&r2.answers[q0.id];
+      if(a2&&a2.ok===false&&a2.sel!=null){ if(_resetAt&&(r2.last||0)<_resetAt)continue; sel[q0.id]=a2.sel; graded[q0.id]=true; break; }
+    }
+  }
   var idx=-1, doneCnt=0;
   for(var j=0;j<qs.length;j++){
     if(graded[qs[j].id]){ doneCnt++; }
@@ -760,8 +780,8 @@ function startWrong(ch){
   if(idx<0) idx=0;   // 全部练完时回到第一题（可回看判分与解析）
   prac={pid:pid,p:{id:pid,title:title,qs:qs},idx:idx,sel:sel,graded:graded};
   openPractice();
-  if(doneCnt>0&&doneCnt<qs.length) toast("已跳到第 "+(idx+1)+" 题接着练（本轮已练 "+doneCnt+" / "+qs.length+" 题）");
-  else if(doneCnt>=qs.length&&doneCnt>0) toast("错题已全部练过（" + doneCnt + " 题）· 回到第一题可回看解析");
+  if(doneCnt>0&&doneCnt<qs.length) toast("已恢复 "+doneCnt+" 题的答错记录 · 已跳到第 "+(idx+1)+" 题接着练");
+  else if(doneCnt>=qs.length&&doneCnt>0) toast("已恢复全部 "+doneCnt+" 题的答错记录 · 可回看解析 · 重做请点「重做本题」");
   else toast("共 "+qs.length+" 道错题 · 答对即自动移除");
 }
 
@@ -1196,7 +1216,10 @@ function pracCommit(q){
   commitAnswerPid(prac.pid, q.id, sel, ok);
   renderPracticeQ();
   // 错题练习中答对：commitAnswerPid 已将其移出错题本，这里给个明确反馈
-  if(ok&&(prac.pid==="wrong"||prac.pid.indexOf("wch")===0)&&!wrong[q.id]) toast("✅ 答对了，已移出错题本");
+  if(ok&&(prac.pid==="wrong"||prac.pid.indexOf("wch")===0)&&!wrong[q.id]){
+    recSyncFromRedo(q.id,true);   // 同步该题在其他练习里的记录，避免显示不一致
+    toast("✅ 答对了，已移出错题本");
+  }
 }
 function renderPracticeQ(){
   var q=prac.p.qs[prac.idx];
@@ -1266,6 +1289,11 @@ function renderPracSide(){
     if(!confirm("重置本卷练习进度？错题本中由该卷产生的错题不会自动移除。"))return;
     var p0=prac.p;
     delete records[prac.pid]; saveRec();
+    if(prac.pid==="wrong"||prac.pid.indexOf("wch")===0){
+      /* 错题练习：记下重置时间。重新进入时不再回退显示各卷里重置前的旧答错记录，
+         保证「重置」之后确实是重新做，而不是又被旧记录填满 */
+      var rn=pRec(prac.pid); rn.answers={}; rn.log=[]; rn.last=0; rn.resetAt=Date.now(); saveRec();
+    }
     p0.qs.forEach(function(q){delete answered[q.id];});
     save(); refreshProg();
     prac={pid:prac.pid,p:p0,idx:0,sel:{},graded:{}};
