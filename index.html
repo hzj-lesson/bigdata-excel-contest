@@ -1141,9 +1141,10 @@ function startRandom(){
   // 题型配额（不含实操）
   var plan=[{type:"judge",n:40},{type:"single",n:88},{type:"multi",n:20}];
   function isLabQ(q){
-    if(q.lab) return true;
-    if(q.id && String(q.id).indexOf("p18")===0) return true;   // 实操专项
-    if((q.o||[]).some(function(o){return /<img[\s>]/i.test(String(o));})) return true;  // 实操情境（图片选项）
+    if(q.lab||q.ds) return true;                                 // 实操标记（lab/ds 任一即实操）
+    if(q.id && String(q.id).indexOf("p18")===0) return true;     // 实操专项（pr18）
+    if(/<img[\s>/]/i.test(String(q.q||""))) return true;          // 题干含图片（实操情境图）
+    if((q.o||[]).some(function(o){return /<img[\s>/]/i.test(String(o));})) return true;  // 选项含图片（图表/截图）
     return false;
   }
   function stemKey(q){
@@ -1434,6 +1435,20 @@ function renderRecords(){
       '<div style="text-align:right">已练 <b>'+done+'</b> / '+p.qs.length+'<br><span style="color:'+(acc>=80?'var(--ok)':'var(--warn)')+'">正确率 '+acc+'%</span></div>'+
       '</div>';
   }).join("");
+  // 随机模考记录（独立进度键 rand；随机卷固定 148 题，已练数来自作答记录）
+  var randRec=records["rand"];
+  if(randRec&&(Object.keys(randRec.answers||{}).length||(randRec.log||[]).length)){
+    var rA=randRec.answers||{}, rDone=Object.keys(rA).length, rCorrect=0;
+    for(var rk in rA)if(rA[rk].ok)rCorrect++;
+    overallDone+=rDone;overallCorrect+=rCorrect;
+    var rTotal=randRec.total||148;
+    var rAcc=rDone?Math.round(rCorrect/rDone*100):0;
+    var rLast=randRec.last?new Date(randRec.last).toLocaleString("zh-CN",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}):"—";
+    paperHtml+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border);font-size:13.5px">'+
+      '<div style="flex:1"><b>🎲 随机模考卷</b><div style="color:var(--muted);font-size:12px">最近练习 '+rLast+'</div></div>'+
+      '<div style="text-align:right">已练 <b>'+rDone+'</b> / '+rTotal+'<br><span style="color:'+(rAcc>=80?'var(--ok)':'var(--warn)')+'">正确率 '+rAcc+'%</span></div>'+
+      '</div>';
+  }
   // 收藏重练记录（独立进度键 fav，与模拟卷/按章刷题并列）
   var favRec=records["fav"];
   if(favRec&&(Object.keys(favRec.answers||{}).length||(favRec.log||[]).length)){
