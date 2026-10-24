@@ -647,7 +647,8 @@ function favPanelHTML(){
     '<div style="flex:1">共 <b style="font-size:18px;color:var(--primary)">'+ids.length+'</b> 题</div>'+
     '<button class="tbtn" id="btnFavRedo" style="border-color:var(--primary);color:var(--primary);font-weight:700">▶ 重练收藏</button>'+
     '<button class="tbtn" id="btnFavClear">清空收藏</button></div>';
-  return headBar+'<details'+(favOpen?' open':'')+'><summary style="cursor:pointer;color:var(--primary);font-weight:700;padding:6px 0;user-select:none">📂 展开收藏题目（'+ids.length+' 题）· 点击查看</summary>'+rows+'</details>';
+  return headBar+'<details'+(favOpen?' open':'')+'><summary style="cursor:pointer;color:var(--primary);font-weight:700;padding:6px 0;user-select:none">📂 展开收藏题目（'+ids.length+' 题）· 点击查看</summary>'+rows+'</details>'+
+    '<div style="font-size:12px;color:var(--muted);margin-top:6px">练题答对即自动移出收藏（答错留下继续练），与错题本规则一致</div>';
 }
 function refreshFav(){
   var n=Object.keys(fav).length;
@@ -1146,7 +1147,10 @@ function startFav(){
   if(!qs.length){ toast("收藏的题似乎已不存在，请清空收藏重试"); return; }
   var p={id:"fav", title:"⭐ 我的收藏", qs:qs};
   var r=records["fav"]||{}; var sel={},graded={};
-  for(var k in (r.answers||{})){ sel[k]=r.answers[k].sel; graded[k]=true; }
+  for(var k in (r.answers||{})){
+    if(!fav[k])continue;   // 已答对移出收藏的题不回填进度（与错题本「只恢复仍在错题本里的题」一致）
+    sel[k]=r.answers[k].sel; graded[k]=true;
+  }
   var idx=0, doneCnt=0, allDone=true;
   for(var i=0;i<qs.length;i++){
     if(graded[qs[i].id]){doneCnt++; continue;}
@@ -1155,7 +1159,8 @@ function startFav(){
   prac={pid:"fav",p:p,idx:idx,sel:sel,graded:graded};
   openPractice();
   if(allDone&&doneCnt>0) toast("收藏已全部练完（"+doneCnt+"/"+qs.length+"），可从右侧题号重看");
-  else if(doneCnt>0) toast("已跳到第 "+(idx+1)+" 题接着练（已练 "+doneCnt+" 题）");
+  else if(doneCnt>0) toast("已跳到第 "+(idx+1)+" 题接着练（已练 "+doneCnt+" 题 · 答对自动移出）");
+  else toast("共 "+qs.length+" 道收藏 · 答对自动移出 · 答错留下继续练");
 }
 /* 随机模考：按考试标准(判断40+单选88+多选20=148)从全库去重随机抽取，不含实操题 */
 function startRandom(){
@@ -1302,6 +1307,12 @@ function pracCommit(q){
   if(ok&&(prac.pid==="wrong"||prac.pid.indexOf("wch")===0)&&!wrong[q.id]){
     recSyncFromRedo(q.id,true);   // 同步该题在其他练习里的记录，避免显示不一致
     toast("✅ 答对了，已移出错题本");
+  }
+  // 收藏练习中答对：答对=已攻克，自动移出收藏（与错题本行为一致；仅收藏练习内生效）
+  if(ok&&prac.pid==="fav"&&fav[q.id]){
+    delete fav[q.id]; saveFav(); refreshFav();
+    recSyncFromRedo(q.id,true);   // 同步该题在其他练习里的记录，避免显示不一致
+    toast("✅ 答对了，已移出收藏（剩 "+Object.keys(fav).length+" 题）");
   }
 }
 function renderPracticeQ(){
