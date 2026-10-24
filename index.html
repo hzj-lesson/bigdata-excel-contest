@@ -1164,8 +1164,6 @@ function startFav(){
 }
 /* 随机模考：按考试标准(判断40+单选88+多选20=148)从全库去重随机抽取，不含实操题 */
 function startRandom(){
-  // 题型配额（不含实操）
-  var plan=[{type:"judge",n:40},{type:"single",n:88},{type:"multi",n:20}];
   function isLabQ(q){
     if(q.lab||q.ds) return true;                                 // 实操标记（lab/ds 任一即实操）
     if(q.id && String(q.id).indexOf("p18")===0) return true;     // 实操专项（pr18）
@@ -1176,26 +1174,47 @@ function startRandom(){
   function stemKey(q){
     return String(q.q||"").replace(/[\s　]+/g,"").replace(/[（(【\[{]/g,"(").replace(/[）)】\]}]/g,")").replace(/[。\.，,、;；:：]+$/,"");
   }
-  var pool={judge:[],single:[],multi:[]}, seen={};
+  /* 章节配额：统计 7 套标准官方卷（pr19/21-26，分布完全一致）的「章×题型」联合分布，
+     剔除 ch0（官方卷每套 8 题、即带 dataSet 素材的实操情境题，按既定规则不抽）后，
+     每种题型内部按各章占比等比缩放到 判断40/单选88/多选20，总量仍为 148。
+     例：官方单选 559 题中第 5 章占 273 → 随机卷单选 88 中第 5 章取 44 题。 */
+  var CH_PLAN={
+    judge:[[1,1],[2,6],[3,6],[4,4],[5,10],[6,6],[7,3],[8,4]],
+    single:[[1,3],[2,3],[3,3],[4,4],[5,44],[6,11],[7,7],[8,10],[9,2],[10,1]],
+    multi:[[1,1],[2,1],[3,1],[4,1],[5,10],[6,2],[7,1],[8,1],[9,1],[10,1]]
+  };
+  // 按「题型 → 章节」建去重池（全库，含 12 套卷）
+  var pool={judge:{},single:{},multi:{}}, seen={};
   DATA.practices.forEach(function(p){
     p.qs.forEach(function(q){
       if(isLabQ(q)) return;
       if(q.type!=="judge"&&q.type!=="single"&&q.type!=="multi") return;
       var k=stemKey(q); if(seen[k]) return; seen[k]=1;
-      if(pool[q.type]) pool[q.type].push(q);
+      var c=q.ch||0;
+      if(!pool[q.type][c])pool[q.type][c]=[];
+      pool[q.type][c].push(q);
     });
   });
-  var qs=[];
-  for(var pi=0;pi<plan.length;pi++){
-    var t=plan[pi].type, need=plan[pi].n, arr=pool[t];
-    if(arr.length<need){ toast("「"+t+"」可用题不足 "+need+" 题（当前 "+arr.length+"），无法组卷"); return; }
-    var cp=arr.slice();
-    for(var i=cp.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=cp[i];cp[i]=cp[j];cp[j]=tmp;}
-    qs=qs.concat(cp.slice(0,need));
-  }
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  var qs=[], used={};
+  ["judge","single","multi"].forEach(function(t){
+    CH_PLAN[t].forEach(function(pair){
+      var arr=shuffle((pool[t][pair[0]]||[]).filter(function(q){return !used[q.id];}));
+      arr.slice(0,pair[1]).forEach(function(q){used[q.id]=1;qs.push(q);});
+    });
+  });
+  // 兜底：某章题量不足时从同类型其余章补足，保证各题型总数严格 40/88/20
+  ["judge","single","multi"].forEach(function(t){
+    var quota=0; CH_PLAN[t].forEach(function(pr){quota+=pr[1];});
+    var got=qs.filter(function(q){return q.type===t;}).length;
+    if(got>=quota)return;
+    var rest=[]; for(var c in pool[t])pool[t][c].forEach(function(q){if(!used[q.id])rest.push(q);});
+    shuffle(rest).slice(0,quota-got).forEach(function(q){used[q.id]=1;qs.push(q);});
+  });
+  if(qs.length<148){ toast("可用题不足 148 题（当前 "+qs.length+"），无法组卷"); return; }
   // 整体再洗牌，避免题型扎堆
-  for(var m=qs.length-1;m>0;m--){var n2=Math.floor(Math.random()*(m+1));var tmp2=qs[m];qs[m]=qs[n2];qs[n2]=tmp2;}
-  var p={id:"rand",title:"🎲 随机模考卷 · 148 题（判断40＋单选88＋多选20）",qs:qs};
+  shuffle(qs);
+  var p={id:"rand",title:"🎲 随机模考卷 · 148 题（判断40＋单选88＋多选20 · 章节分布对标官方卷）",qs:qs};
   /* 用户要求：做完退出后成绩保留、不自动刷新——只有主动点「重新出卷」才换新卷，
      且换卷前必须确认，避免误点覆盖上一套成绩 */
   var prev=records["rand"];
@@ -1204,7 +1223,7 @@ function startRandom(){
     pRec("rand").total=qs.length; saveRec();      // 固定 148，供成绩摘要显示总数
     prac={pid:"rand",p:p,idx:0,sel:{},graded:{}};
     openPractice();
-    toast("已生成随机模考卷：判断 40 · 单选 88 · 多选 20（共 148，已排除实操题）");
+    toast("已生成随机模考卷：判断 40 · 单选 88 · 多选 20（共 148，章节分布对标官方卷，已排除实操题）");
   }
   if(prev&&(Object.keys(prev.answers||{}).length||(prev.log||[]).length)){
     askConfirm("重新出卷将生成一套全新试卷，并覆盖上一套随机模考成绩（已练 "+Object.keys(prev.answers||{}).length+" 题）。确定重新出卷吗？",genRand,"确定重新出卷");
@@ -1231,7 +1250,7 @@ function renderRandBox(){
     box.innerHTML=
       '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">'+
       '<div style="color:var(--muted);font-size:13.5px;flex:1;min-width:260px">'+
-      '完全模拟省赛题型结构：<b style="color:var(--fg)">判断 40 题、单选 88 题、多选 20 题</b>，共 148 题；从全库去重后随机抽取，<b style="color:var(--fg)">不含实操情境题与实操专项题</b>。点「生成随机模考卷」即出一套全新试卷，逐题作答后即时给出答案与解析；<b style="color:var(--fg)">做完退出成绩自动保存</b>，想换新卷再点「重新出卷」。</div>'+
+      '完全模拟省赛题型结构：<b style="color:var(--fg)">判断 40 题、单选 88 题、多选 20 题</b>，共 148 题；<b style="color:var(--fg)">章节分布对标官方模拟卷</b>（按官方标准卷的各章占比抽题），从全库去重后随机抽取，<b style="color:var(--fg)">不含实操情境题与实操专项题</b>。点「生成随机模考卷」即出一套全新试卷，逐题作答后即时给出答案与解析；<b style="color:var(--fg)">做完退出成绩自动保存</b>，想换新卷再点「重新出卷」。</div>'+
       '<button class="tbtn" id="btnRand" style="border-color:var(--primary);color:var(--primary);font-weight:700;font-size:15px;padding:10px 18px;white-space:nowrap">🎲 生成随机模考卷</button></div>';
   }else{
     box.innerHTML=
