@@ -472,6 +472,25 @@ function escStem(s){
   return out+esc(t.slice(last));
 }
 function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove("show")},1300);}
+/* 通用确认框：替代原生 confirm()。
+   原生对话框在 iframe 嵌入（如各类预览面板）/部分浏览器环境会被静默拦截——不弹窗、直接返回 false，
+   用户点了按钮却毫无反应；自绘弹窗在任何环境都可见可用，样式也与全站统一。 */
+function askConfirm(msg,onYes,okText){
+  var old=document.getElementById("askOv");if(old&&old.parentNode)old.parentNode.removeChild(old);
+  var ov=document.createElement("div");ov.id="askOv";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(15,30,60,.55);z-index:1001;display:flex;align-items:center;justify-content:center;padding:16px";
+  ov.innerHTML='<div class="card" style="max-width:440px;width:100%;text-align:center">'+
+    '<div style="font-size:15px;line-height:1.75;margin:8px 0 16px">'+msg+'</div>'+
+    '<div style="display:flex;gap:10px;justify-content:center">'+
+    '<button class="tbtn" id="askNo" style="min-width:96px;justify-content:center">取消</button>'+
+    '<button class="tbtn" id="askYes" style="min-width:96px;justify-content:center;background:var(--primary);color:#fff;border-color:var(--primary)">'+(okText||"确定")+'</button>'+
+    '</div></div>';
+  document.body.appendChild(ov);
+  function close(){if(ov&&ov.parentNode)ov.parentNode.removeChild(ov);}
+  document.getElementById("askNo").onclick=close;
+  document.getElementById("askYes").onclick=function(){close();onYes();};
+  ov.addEventListener("click",function(e){if(e.target===ov)close();});
+}
 function optLetter(i){return String.fromCharCode(65+i);}
 function isAns(q,i){
   // 答案统一以字母存储（A/B/C/D）。判断题选项「正确/错误」对应 A/B，按字母判定即可
@@ -642,8 +661,9 @@ function refreshFav(){
     var c=document.getElementById("btnFavClear");
     if(c)c.onclick=function(){
       if(!Object.keys(fav).length)return;
-      if(!confirm("确定清空全部收藏？"))return;
-      fav={}; saveFav(); refreshFav(); toast("已清空收藏");
+      askConfirm("确定清空全部收藏？",function(){
+        fav={}; saveFav(); refreshFav(); toast("已清空收藏");
+      },"确定清空");
     };
   }
 }
@@ -1070,13 +1090,14 @@ function syncModal(mode){
   var go=document.getElementById("syncGo");
   if(go)go.onclick=function(){
     var d;try{d=syncDecode(document.getElementById("syncTa").value)}catch(e){toast("❌ 同步码无效，请完整粘贴 EC1. 开头的内容");return;}
-    if(!confirm("导入将覆盖本机进度与错题本，确定继续？"))return;
-    if(d.done)localStorage.setItem(KEY,JSON.stringify(d.done));
-    if(d.wrong)localStorage.setItem(WKEY,JSON.stringify(d.wrong));
-    if(d.rec)localStorage.setItem(RKEY,JSON.stringify(d.rec));
-    if(d.ans)localStorage.setItem(QKEY,JSON.stringify(d.ans));
-    if(d.fav)localStorage.setItem(FKEY,JSON.stringify(d.fav));
-    toast("✅ 同步完成，正在刷新…");setTimeout(function(){location.reload()},600);
+    askConfirm("导入将覆盖本机进度与错题本，确定继续？",function(){
+      if(d.done)localStorage.setItem(KEY,JSON.stringify(d.done));
+      if(d.wrong)localStorage.setItem(WKEY,JSON.stringify(d.wrong));
+      if(d.rec)localStorage.setItem(RKEY,JSON.stringify(d.rec));
+      if(d.ans)localStorage.setItem(QKEY,JSON.stringify(d.ans));
+      if(d.fav)localStorage.setItem(FKEY,JSON.stringify(d.fav));
+      toast("✅ 同步完成，正在刷新…");setTimeout(function(){location.reload()},600);
+    },"确定导入");
   };
 }
 
@@ -1173,14 +1194,18 @@ function startRandom(){
   /* 用户要求：做完退出后成绩保留、不自动刷新——只有主动点「重新出卷」才换新卷，
      且换卷前必须确认，避免误点覆盖上一套成绩 */
   var prev=records["rand"];
-  if(prev&&(Object.keys(prev.answers||{}).length||(prev.log||[]).length)){
-    if(!confirm("重新出卷将生成一套全新试卷，并覆盖上一套随机模考成绩（已练 "+Object.keys(prev.answers||{}).length+" 题）。确定重新出卷吗？"))return;
+  function genRand(){
+    if(records["rand"]) delete records["rand"];   // 确认后才是全新一套，不续接旧进度
+    pRec("rand").total=qs.length; saveRec();      // 固定 148，供成绩摘要显示总数
+    prac={pid:"rand",p:p,idx:0,sel:{},graded:{}};
+    openPractice();
+    toast("已生成随机模考卷：判断 40 · 单选 88 · 多选 20（共 148，已排除实操题）");
   }
-  if(records["rand"]) delete records["rand"];   // 确认后才是全新一套，不续接旧进度
-  pRec("rand").total=qs.length; saveRec();      // 固定 148，供成绩摘要显示总数
-  prac={pid:"rand",p:p,idx:0,sel:{},graded:{}};
-  openPractice();
-  toast("已生成随机模考卷：判断 40 · 单选 88 · 多选 20（共 148，已排除实操题）");
+  if(prev&&(Object.keys(prev.answers||{}).length||(prev.log||[]).length)){
+    askConfirm("重新出卷将生成一套全新试卷，并覆盖上一套随机模考成绩（已练 "+Object.keys(prev.answers||{}).length+" 题）。确定重新出卷吗？",genRand,"确定重新出卷");
+  }else{
+    genRand();
+  }
 }
 
 /* 随机模考板块：状态感知渲染。
@@ -1353,18 +1378,19 @@ function renderPracSide(){
     return '<div class="'+cls+(idx===prac.idx?" cur":"")+'" onclick="pracGoto('+idx+')">'+(idx+1)+'</div>';
   }).join("");
   document.getElementById("pracReset").onclick=function(){
-    if(!confirm("重置本卷练习进度？错题本中由该卷产生的错题不会自动移除。"))return;
-    var p0=prac.p;
-    delete records[prac.pid]; saveRec();
-    if(prac.pid==="wrong"||prac.pid.indexOf("wch")===0){
-      /* 错题练习：记下重置时间。重新进入时不再回退显示各卷里重置前的旧答错记录，
-         保证「重置」之后确实是重新做，而不是又被旧记录填满 */
-      var rn=pRec(prac.pid); rn.answers={}; rn.log=[]; rn.last=0; rn.resetAt=Date.now(); saveRec();
-    }
-    p0.qs.forEach(function(q){delete answered[q.id];});
-    save(); refreshProg();
-    prac={pid:prac.pid,p:p0,idx:0,sel:{},graded:{}};
-    renderPracticeQ(); renderRecords(); toast("已重置本卷进度");
+    askConfirm("重置本卷练习进度？错题本中由该卷产生的错题不会自动移除。",function(){
+      var p0=prac.p;
+      delete records[prac.pid]; saveRec();
+      if(prac.pid==="wrong"||prac.pid.indexOf("wch")===0){
+        /* 错题练习：记下重置时间。重新进入时不再回退显示各卷里重置前的旧答错记录，
+           保证「重置」之后确实是重新做，而不是又被旧记录填满 */
+        var rn=pRec(prac.pid); rn.answers={}; rn.log=[]; rn.last=0; rn.resetAt=Date.now(); saveRec();
+      }
+      p0.qs.forEach(function(q){delete answered[q.id];});
+      save(); refreshProg();
+      prac={pid:prac.pid,p:p0,idx:0,sel:{},graded:{}};
+      renderPracticeQ(); renderRecords(); toast("已重置本卷进度");
+    },"确定重置");
   };
 }
 function pracGoto(i){prac.idx=i;renderPracticeQ();}
